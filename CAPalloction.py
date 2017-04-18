@@ -30,8 +30,8 @@ def r_nks(BSid,transP,):###求信噪比函数
 
 ### MinRate表示用户的速度
 minRate = [float(format(uniform(50,120),'.1f')) for i in xrange(24)]
-##用户距离基站的位置
-userLocation = [float(format(uniform(50,120),'.1f')) for i in xrange(24)]
+# ##用户距离基站的位置
+# userLocation = [float(format(uniform(50,120),'.1f')) for i in xrange(24)]
 ##用户最大速率，即MOS(4.5)时对应的速率
 maxRate = 1500 #kbit/s
 ### 下面是初始化信息
@@ -73,11 +73,11 @@ for i in BS2:
 BStouser = []
 BS1touser =  []   
 BS2touser =  []  
-###寻找微基站BS1范围内的基站、
+###寻找微基站BS1范围内的用户
 for i in BS2:
     if i[1]<=100:
         BS1touser.append(i)
-###寻找微基站BS2范围内的基站、
+###寻找微基站BS2范围内的用户
 for i in BS3:
     if i[1]<=100:
         BS2touser.append(i)
