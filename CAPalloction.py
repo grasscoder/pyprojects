@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from coverage import Draw
 from SINR import distance
 from UserList import UserList
-from scipy.constants.constants import pt
+
 """
 信道分配的代码
 信道分配的原则是：
@@ -59,14 +59,15 @@ channelbandwidth = bandwidth/channelnum  ##每个信道的带宽
 # macroChannelSet = [i for i in xrange(64)]  ##宏基站信道编号
 # picroChannelSet = [i for i in xrange(64)]  ##微基站信道编号
 ChannelSet = [[i for i in xrange((channelnum))] for j in xrange(TotalNum)]#生成基站的信道列表，每一行是一个基站的信道集合 ，第0行代表宏基站
-for s in ChannelSet:
-    print s
-print len(ChannelSet)
+# for s in ChannelSet:
+#     print s
+# print len(ChannelSet)
 
 
 #### 接收用户的坐标位置和基站的坐标位置
-UserX,UserY, BaseX,BaseY = Draw(samples_num= usernum,R = 500)
+UserX,UserY, BSX,BSY = Draw(samples_num= usernum,R = 500)
 
+BS = []
 MBS = []
 PBS1 = []
 PBS2 = []
@@ -78,34 +79,35 @@ RBS1 = []
 RBS2 = []
 FBS1 = []
 FBS2 = []
-
 k = 0
 ##用户编号与他们到其他基站的距离
-for k,i,j in zip(userID,UserX,UserY):
-    BS1.append((k,distance(i,j,0,0))) 
-    BS2.append((k,distance(i,j,250,250))) 
-    BS3.append((k,distance(i,j,-250,-250))) 
-    k = k + 1
+# for k,i,j in zip(userID,UserX,UserY):
+#     PBS1.append(k if distance(i,j,0,0)<=100) 
+#     PBS2.append((k,distance(i,j,250,250))) 
+#     PBS3.append((k,distance(i,j,-250,-250))) 
+#     k = k + 1
+###以用户所在基站范围为标准将用户分类
+for i in xrange(len(BSX)):
+    BS[i] = [(x,y) for x,y in zip(UserX ,UserY) if distance(x, y, BSX[i], BSY[i])<=100]
+print BS
     
-for i in BS2:
-    if i[1]>100:
-        pass
+
 
 BStouser = []
 BS1touser =  []   
 BS2touser =  []  
-###寻找微基站BS1范围内的用户
-for i in BS2:
-    if i[1]<=100:
-        BS1touser.append(i)
-###寻找微基站BS2范围内的用户
-for i in BS3:
-    if i[1]<=100:
-        BS2touser.append(i)
-###不在上面两个基站范围内的用户就是分布在宏基站范围内的用户户
-for i in BS1:
-    if i[0] not in [j[0] for j in BS1touser+BS2touser]:
-        BStouser.append(i)
+# ###寻找微基站BS1范围内的用户
+# for i in PBS2:
+#     if i[1]<=100:
+#         BS1touser.append(i)
+# ###寻找微基站BS2范围内的用户
+# for i in BS3:
+#     if i[1]<=100:
+#         BS2touser.append(i)
+# ###不在上面两个基站范围内的用户就是分布在宏基站范围内的用户户
+# for i in BS1:
+#     if i[0] not in [j[0] for j in BS1touser+BS2touser]:
+#         BStouser.append(i)
 
 ##用户离哪个基站近，哪个基站就优先分配信道给用户满足用户的最低速率要求
 # print BS1
