@@ -29,7 +29,7 @@ def r_nks(BSid,transP,):###求信噪比函数
     return 1 
 
 ### MinRate表示用户的速度
-minRate = [float(format(uniform(50,120),'.1f')) for i in xrange(24)]
+
 # ##用户距离基站的位置
 # userLocation = [float(format(uniform(50,120),'.1f')) for i in xrange(24)]
 ##用户最大速率，即MOS(4.5)时对应的速率
@@ -49,6 +49,7 @@ bandwidth = 150.0 ##带宽/MHz,w->dbm:dbm = 10log10(w/1mw)=30+10log10(W),#print 
 macroPower = 20.0  ##宏基站功率/w
 picroPower = 1.0   ##微基站功率/w
 noisePower = 9.0   ##dB
+minRate = [1200 for i in xrange(usernum) ]##单位byte/s
 # macropathLoss = 128.1 + 37.6*np.log10(d) ###d表示用户与基站的距离
 # micropathLoss = 145.4+37.5*np.log10(d)   ###/km
 
