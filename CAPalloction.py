@@ -35,12 +35,17 @@ minRate = [float(format(uniform(50,120),'.1f')) for i in xrange(24)]
 ##用户最大速率，即MOS(4.5)时对应的速率
 maxRate = 1500 #kbit/s
 ### 下面是初始化信息
+MacroNum = 1
+PicoNum = 6
+FemtoNum = 2
+RelayNum = 2
+TotalNum =  MacroNum+PicoNum+FemtoNum+RelayNum
 usernum = np.random.randint(20,50)
 userID = [i for i in range(usernum)]##用户编号
 macroR = 500.0     ##宏基站的覆盖半径/m
 microR = 100.0     ##微基站的覆盖半径/m
 channelnum = 64    ##信道数量
-broadwidth = 150.0 ##带宽/MHz,w->dbm:dbm = 10log10(w/1mw)=30+10log10(W),#print 40+10*np.log10(15)=51.
+bandwidth = 150.0 ##带宽/MHz,w->dbm:dbm = 10log10(w/1mw)=30+10log10(W),#print 40+10*np.log10(15)=51.
 macroPower = 20.0  ##宏基站功率/w
 picroPower = 1.0   ##微基站功率/w
 noisePower = 9.0   ##dB
@@ -49,15 +54,30 @@ noisePower = 9.0   ##dB
 
 macroAveragePower = macroPower/channelnum  ##宏基站的信道平均功率
 microAveragePower = picroPower/channelnum  ##微基站的信道平均功率
-channelbandwidth = broadwidth/channelnum  ##每个信道的带宽
-macroChannelSet = [i for i in xrange(64)]  ##宏基站信道编号
-picroChannelSet = [i for i in xrange(64)]  ##微基站信道编号
-#### 接收用户的坐标位置
-UserX,UserY = Draw(usernum)
+channelbandwidth = bandwidth/channelnum  ##每个信道的带宽
+# macroChannelSet = [i for i in xrange(64)]  ##宏基站信道编号
+# picroChannelSet = [i for i in xrange(64)]  ##微基站信道编号
+ChannelSet = [[i for i in xrange((channelnum))] for j in xrange(TotalNum)]#生成基站的信道列表，每一行是一个基站的信道集合 ，第0行代表宏基站
+for s in ChannelSet:
+    print s
+print len(ChannelSet)
 
-BS1 = []
-BS2 = []
-BS3 = []
+
+#### 接收用户的坐标位置和基站的坐标位置
+UserX,UserY, BaseX,BaseY = Draw(samples_num= usernum,R = 500)
+
+MBS = []
+PBS1 = []
+PBS2 = []
+PBS3 = []
+PBS4 = []
+PBS5 = []
+PBS6 = []
+RBS1 = []
+RBS2 = []
+FBS1 = []
+FBS2 = []
+
 k = 0
 ##用户编号与他们到其他基站的距离
 for k,i,j in zip(userID,UserX,UserY):
@@ -98,10 +118,10 @@ for i in BS1:
 # print BS3
 # print len(BS3)
 
-print BStouser
-print BS1touser
-print BS2touser
-plt.show()
+# print BStouser
+# print BS1touser
+# print BS2touser
+# plt.show()
 ######### 信道分配的实现
 """
 距离用户近的且存在 未分配信道 的基站优先随机分配信道给用户，直到满足用户的最低速率要求，然后分配下一个用户
@@ -110,11 +130,11 @@ plt.show()
 ##UsertoBSList 是一个用户与基站的对应信道的分配表
 UsertoBSList = []
 
-for uid in userID:
-    sumrate = 0
-    while(sumrate<minRate[uid] and BS1touser):
-        rate = channelbandwidth*np.log2(1+0)
-        sumrate += rate
+# for uid in userID:
+#     sumrate = 0
+#     while(sumrate<minRate[uid] and BS1touser):
+#         rate = channelbandwidth*np.log2(1+0)
+#         sumrate += rate
 
 
 

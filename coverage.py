@@ -68,12 +68,12 @@ def PicoCircle(range1,range2,num=6):
 
 def Relays(xp,yp,num=2):
     """
-            中继节点的数量默认为2个，
+            中继节点的数量默认为2个，不会产生两次或者多次调用产生不同结果的效果，因为relays函数是以原pico基站的结果作为参数的
     """
     range1 = 100 #范围1
     range2 = 400 #范围2
 #     xp,yp = PicoCircle(range1, range2)
-    xp.insert(0,0)
+    xp.insert(0,0) ##以pico基站的list作为参数，将Relay节点的坐标追加到此list中
     yp.insert(0,0)
     l = len(xp)
     while(len(xp)<l+num+1):
@@ -91,7 +91,33 @@ def Relays(xp,yp,num=2):
     return xp[-num:],yp[-num:]
 #     print xp,yp
 #     print xp[-num:],yp[-num:]
+
+def Femto(xR,yR,num):
+    """
     
+    """
+    range1 = 100 #范围1
+    range2 = 400 #范围2
+
+    xR.insert(0,0) ##以Relay基站的list作为参数，将Femto节点的坐标追加到此list中
+    yR.insert(0,0)
+    l = len(xR)
+    while(len(xR)<l+num+1):
+        _t = np.random.random()*2*pi-pi
+        R = np.random.randint(range1,range2) #半径随机整数
+        _x = R*cos(_t)
+        _y = R*sin(_t)
+        
+        if range1<=np.sqrt(_x**2+_y**2)<=range2:
+            xR.append(_x)
+            yR.append(_y)
+            if not Distance_points(xR, yR, 150):##保证pico基站之间的距离大于150
+                xR.pop()
+                yR.pop()
+    return xR[-num:],yR[-num:]
+    
+    
+       
     
 def RandomNum(num):
     """
@@ -124,16 +150,31 @@ def Draw(samples_num=60,R=500): #samples_num = 60  ### 样本数量,#R = 500 ##�
     plt.plot(R*x,R*y,'ro',label='Users')  ### r*图上的圆点，表示的用户分布位置,x,y分别是向量
     
     ##生成Pico基站的圆心坐标
-    xp,yp = PicoCircle(100, 400)
+    xp,yp = PicoCircle(100, 400, 10)
     
     for i in xrange(len(xp)):
-        DrawCircle(100, xp[i], yp[i])
-    plt.plot(xp,yp,"k^",label="PicoBS")
-    #生成中继节点
-    xR,yR = Relays(xp,yp,num=2)
-    for i in xrange(len(xR)):
-        DrawCircle(100, xR[i], yR[i])
-    plt.plot(xR,yR,"b^",label="Relay")
+        if 0 < i < 6:
+
+            DrawCircle(100, xp[i], yp[i])
+            
+        elif 6 <= i < 8:
+            DrawCircle(100, xp[i], yp[i])
+            
+        else:
+            DrawCircle(100, xp[i], yp[i])
+    plt.plot(xp[0:6],yp[0:6],"k^",label="PicoBS")
+    plt.plot(xp[6:8],yp[6:8],"b^",label="Relay")
+    plt.plot(xp[8:],yp[8:],"y^",label="FemtoBS")
+#     #生成中继节点
+#     xR,yR = Relays(xp,yp,num=2)
+#     for i in xrange(len(xR)):
+#         DrawCircle(100, xR[i], yR[i])
+#     plt.plot(xR,yR,"b^",label="Relay")
+# #     #生成Femto基站
+#     xF,yF = Femto(xp+xR,yp+yR,1)
+#     for i in xrange(len(xF)):
+#         DrawCircle(100, xF[i], yF[i])
+#     plt.plot(xF,yF,"y^",label = "FemtoBS")
     
     ax=plt.gca()  
     ax.set_yticks(np.linspace(-500,600,12))  
@@ -150,7 +191,7 @@ def Draw(samples_num=60,R=500): #samples_num = 60  ### 样本数量,#R = 500 ##�
     plt.savefig('imag.png')  
     plt.legend(loc="upper right",bbox_to_anchor=(1, 1),ncol=1, borderaxespad=0) ##显示图例 
     plt.show()  
-    return R*x,R*y #返回宏基站圆的随机坐标
+    return R*x,R*y,xp,yp #返回用户的随机坐标，和基站的坐标（不包括宏基站）
 
 if __name__=="__main__":
     
