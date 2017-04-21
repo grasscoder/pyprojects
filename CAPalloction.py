@@ -3,7 +3,7 @@ from random import random,uniform
 import numpy as np
 import matplotlib.pyplot as plt
 from coverage import Draw
-from SINR import distance,sinr
+from SINR import distance
 from numpy import log2
 import random
 """
@@ -21,13 +21,7 @@ import random
 求SINR值时，使用的信道功率是平均功率
 
 """
-def r_nks(BSid,transP,):###求信噪比函数
-    """
-    信噪比的公式为：r_nks = ptn/(sum(ptm)+ptotal*)
-    """
-     
-    return 1 
-
+   
 ### MinRate表示用户的速度
 
 # ##用户距离基站的位置
@@ -106,18 +100,29 @@ UserChannelList = [[]]*usernum
 #     while(sumrate<minRate[uid] and BS1touser):
 #         rate = channelbandwidth*np.log2(1+0)
 #         sumrate += rate
+def interference(BSID,chanID):
+    ##不同基站相同信道才会产生干扰，除此之外只有噪声
+    
+    pass
+def sinr(BSid,Userchannellist,chan):###BSid基站类型：0:picoBS;1:MacroBS，已分配信道列表Userchannellist,chan要给用户分配的信道
+    
+    """
+    信噪比的公式为：r_nks = ptn/(sum(ptm)+ptotal*)
+    """
+    if BSid==0:
+        
 
 for bs in BS:#已划分区域的用户列表，即，在某个基站范围内的用户列表
     for xy in bs:#用户列表中的每一个列表
         R = 0 #初始速率设为0
         i = BS.index(bs)##记录当前用户列表的下标值
         L = ChannelSet[i] ##获取当前下标对应的基站的信道列表
-        while(R<Rmin and len(L)>0):##循环，速率达到最小要求速率值Rmin,信道列表中还有未分配的信道
+        while(Rmin < R  and len(L)>0):##循环，速率达到最小要求速率值Rmin,信道列表中还有未分配的信道
             chan = random.choice(L)#从未分配的信道列表中随机选取一个信道编号
             s = sinr(chan) #求这个信道到用户的信噪比
             R += channelbandwidth*log2(1+s)##求累加速率
             L.pop(bs.index(chan))##将已分配的信道弹出信道列表
-            UserChannelList[i].append(xy[0],xy[1],chan)##向用户信道列表中添加已经分配的信道，用户和基站的信息
+            UserChannelList[i].append(xy[0],xy[1],i,chan)##向用户信道列表中添加已经分配的信道，用户和基站编号的信息
         
     
 
