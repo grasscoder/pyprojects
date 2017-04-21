@@ -4,8 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from coverage import Draw
 from SINR import distance
-from UserList import UserList
-
 """
 信道分配的代码
 信道分配的原则是：
@@ -65,21 +63,12 @@ ChannelSet = [[i for i in xrange((channelnum))] for j in xrange(TotalNum)]#生�
 
 
 #### 接收用户的坐标位置和基站的坐标位置
-UserX,UserY, BSX,BSY = Draw(samples_num= usernum,R = 500)
+UserX,UserY, BSX,BSY = Draw(samples_num= usernum,R = 500)#接收用户坐标和基站坐标(不包括宏基站)
 
-BS = []
-MBS = []
-PBS1 = []
-PBS2 = []
-PBS3 = []
-PBS4 = []
-PBS5 = []
-PBS6 = []
-RBS1 = []
-RBS2 = []
-FBS1 = []
-FBS2 = []
-k = 0
+#初始化一个列表，每一行代表一个基站范围内的用户列表
+BS = [0]*(TotalNum-1)
+
+
 ##用户编号与他们到其他基站的距离
 # for k,i,j in zip(userID,UserX,UserY):
 #     PBS1.append(k if distance(i,j,0,0)<=100) 
@@ -88,43 +77,18 @@ k = 0
 #     k = k + 1
 ###以用户所在基站范围为标准将用户分类
 for i in xrange(len(BSX)):
-    BS[i] = [(x,y) for x,y in zip(UserX ,UserY) if distance(x, y, BSX[i], BSY[i])<=100]
-print BS
-    
-
-
-BStouser = []
-BS1touser =  []   
-BS2touser =  []  
-# ###寻找微基站BS1范围内的用户
-# for i in PBS2:
-#     if i[1]<=100:
-#         BS1touser.append(i)
-# ###寻找微基站BS2范围内的用户
-# for i in BS3:
-#     if i[1]<=100:
-#         BS2touser.append(i)
-# ###不在上面两个基站范围内的用户就是分布在宏基站范围内的用户户
-# for i in BS1:
-#     if i[0] not in [j[0] for j in BS1touser+BS2touser]:
-#         BStouser.append(i)
+    BS [i] = [(x,y) for x,y in zip(UserX ,UserY) if distance(x, y, BSX[i], BSY[i])<=100]
+ 
+temp  =[]
+for i in BS:
+    temp += i
+#过滤掉重复的坐标
+temp = list(set(temp))
+# 最后一行是不在其他基站范围，只在宏基站内的用户坐标
+BS.append([(x,y) for x,y in zip(UserX,UserY) if (x,y) not in temp])
 
 ##用户离哪个基站近，哪个基站就优先分配信道给用户满足用户的最低速率要求
-# print BS1
-# print len(BS1)
-# print "\n"
-# 
-# print BS2
-# print len(BS2)
-# 
-# print "\n"
-# print BS3
-# print len(BS3)
 
-# print BStouser
-# print BS1touser
-# print BS2touser
-# plt.show()
 ######### 信道分配的实现
 """
 距离用户近的且存在 未分配信道 的基站优先随机分配信道给用户，直到满足用户的最低速率要求，然后分配下一个用户

@@ -154,12 +154,12 @@ def Draw(samples_num=60,R=500): #samples_num = 60  ### 样本数量,#R = 500 ##�
     
     for i in xrange(len(xp)):
         if 0 < i < 6:
-
+ 
             DrawCircle(100, xp[i], yp[i])
-            
+             
         elif 6 <= i < 8:
             DrawCircle(100, xp[i], yp[i])
-            
+             
         else:
             DrawCircle(100, xp[i], yp[i])
     plt.plot(xp[0:6],yp[0:6],"k^",label="PicoBS")
@@ -175,15 +175,15 @@ def Draw(samples_num=60,R=500): #samples_num = 60  ### 样本数量,#R = 500 ##�
 #     for i in xrange(len(xF)):
 #         DrawCircle(100, xF[i], yF[i])
 #     plt.plot(xF,yF,"y^",label = "FemtoBS")
-    
-    ax=plt.gca()  
-    ax.set_yticks(np.linspace(-500,600,12))  
-    ax.set_yticklabels( ('-500', '-400', '-300', '-200', '-100',  '0',  '100',  '200', '300','400','500','600'))
-    ax.set_xticks(np.linspace(-500,500,11))  
-    ax.set_xticklabels( ('-500', '-400', '-300', '-200', '-100',  '0',  '100',  '200', '300','400','500'))
-
-#     plt.xlim(-R-1,R+1)  ## 图片上x显示的范围
-#     plt.ylim(-R-1,R+100)  ## 图片上y的范围
+     
+#     ax=plt.gca()  
+#     ax.set_yticks(np.linspace(-500,600,12))  
+#     ax.set_yticklabels( ('-500', '-400', '-300', '-200', '-100',  '0',  '100',  '200', '300','400','500','600'))
+#     ax.set_xticks(np.linspace(-500,500,11))  
+#     ax.set_xticklabels( ('-500', '-400', '-300', '-200', '-100',  '0',  '100',  '200', '300','400','500'))
+#  
+    plt.xlim(-R-1,R+1)  ## 图片上x显示的范围
+    plt.ylim(-R-1,R+100)  ## 图片上y的范围
     plt.xlabel('x')  
     plt.ylabel('y')  
     plt.title("BaseStation & User")
