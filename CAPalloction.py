@@ -3,7 +3,9 @@ from random import random,uniform
 import numpy as np
 import matplotlib.pyplot as plt
 from coverage import Draw
-from SINR import distance
+from SINR import distance,sinr
+from numpy import log2
+import random
 """
 信道分配的代码
 信道分配的原则是：
@@ -47,7 +49,8 @@ bandwidth = 150.0 ##带宽/MHz,w->dbm:dbm = 10log10(w/1mw)=30+10log10(W),#print 
 macroPower = 20.0  ##宏基站功率/w
 picroPower = 1.0   ##微基站功率/w
 noisePower = 9.0   ##dB
-minRate = [1200 for i in xrange(usernum) ]##单位byte/s
+Rmin = 1200 ##单位byte/s
+Rmax = 4500 ##单位byte/s
 # macropathLoss = 128.1 + 37.6*np.log10(d) ###d表示用户与基站的距离
 # micropathLoss = 145.4+37.5*np.log10(d)   ###/km
 
@@ -95,7 +98,8 @@ BS.append([(x,y) for x,y in zip(UserX,UserY) if (x,y) not in temp])
 用户速率初始值为0,的
 """
 ##UsertoBSList 是一个用户与基站的对应信道的分配表
-UsertoBSList = []
+UserChannelList = [[]]*usernum
+# print UserChannelList
 
 # for uid in userID:
 #     sumrate = 0
@@ -103,7 +107,19 @@ UsertoBSList = []
 #         rate = channelbandwidth*np.log2(1+0)
 #         sumrate += rate
 
-
+for bs in BS:#已划分区域的用户列表，即，在某个基站范围内的用户列表
+    for xy in bs:#用户列表中的每一个列表
+        R = 0 #初始速率设为0
+        i = BS.index(bs)##记录当前用户列表的下标值
+        L = ChannelSet[i] ##获取当前下标对应的基站的信道列表
+        while(R<Rmin and len(L)>0):##循环，速率达到最小要求速率值Rmin,信道列表中还有未分配的信道
+            chan = random.choice(L)#从未分配的信道列表中随机选取一个信道编号
+            s = sinr(chan) #求这个信道到用户的信噪比
+            R += channelbandwidth*log2(1+s)##求累加速率
+            L.pop(bs.index(chan))##将已分配的信道弹出信道列表
+            UserChannelList[i].append(xy[0],xy[1],chan)##向用户信道列表中添加已经分配的信道，用户和基站的信息
+        
+    
 
 
 

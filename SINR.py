@@ -20,11 +20,11 @@ def macropathLoss(d):
 def micropathLoss(d):
     return 145.4+37.5*np.log10(d)
 
-def macroSinr(channelpower,numPico,userposition):
+def sinr(a): #channelpower,numPico,userposition):
     """
     宏基站分配某个或者几个信道给一个用户，满足他的最低速率要求，如果                  
     """
-    pass
+    return a
 
 def microSinr():
     pass
