@@ -118,14 +118,14 @@ class BS:  #还需要实现获取可连接用户功能（通过DM距离矩阵）
                 
                 
                 
-def SetBS (macronum, piconum, infofmbs, infofpbs, DM):
+def SetBS (macronum, piconum, infombs, infopbs, DM):
     '''设置基站信息，输入macro基站数，pico基站数，macro信息，pico信息，距离矩阵'''
     BSList = []
     for i in range(macronum):    #循环macro基站个数次
-        m  = BS(infofmbs[0],infofmbs[1],infofmbs[2],DM[len(BSList)])  #建立macr属性的BS对象 根据现有的基站数（len（BSList））来确定该取DM的哪一行
+        m  = BS(infombs[0],infombs[1],infombs[2],DM[len(BSList)])  #建立macr属性的BS对象 根据现有的基站数（len（BSList））来确定该取DM的哪一行
         BSList.append(m)  #加入到基站列表
     for i in range(piconum):  #同上，pico基站个数次
-        p  = BS(infofpbs[0],infofpbs[1],infofpbs[2],DM[len(BSList)])
+        p  = BS(infopbs[0],infopbs[1],infopbs[2],DM[len(BSList)])
         BSList.append(p)
     
     return BSList
@@ -146,7 +146,7 @@ class Individual:
     
     def __init__(self, BS, userNum, maxc, Qmax, Alpha, B):
         '''
-        传入参数，BS为基站类数组，userNum是用户个数，maxc是每个用户可连接最大信道数，pm变异率
+        传入参数，BS为基站类数组BS[0],BS[1],BS[2]，userNum是用户个数，maxc是每个用户可连接最大信道数，pm变异率
         '''
   
         self.BSNum = len(BS)   #基站数量
@@ -198,6 +198,9 @@ class Individual:
                     #如果随机数大于P,并且可选用户列表不为空，则为当前信道分配用户
                     try:
                         user = random.choice(self.BS[i].userUnderCover)
+                        '''
+                                                                            一个用户可能分配到好几个信道，大于3个也是可能 出现的
+                        '''
                         chan.append(user)   #随机在可选用户群中选取一个用户分配给当前信道
                         self.userList[user] += 1   #该用户被分配的信道数+1
                         wp = random.randint(2,int(wholePower/(self.BS[i].chaNum-j)*0.6))-1  #随机生成一个功率值(1到剩余功率的50%+1)

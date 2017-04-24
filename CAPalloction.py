@@ -35,7 +35,7 @@ FemtoNum = 2
 RelayNum = 2
 TotalNum =  MacroNum+PicoNum+FemtoNum+RelayNum
 usernum = np.random.randint(20,50)
-userID = [i for i in range(usernum)]##用户编号
+
 macroR = 500.0     ##宏基站的覆盖半径/m
 microR = 100.0     ##微基站的覆盖半径/m
 channelnum = 64    ##信道数量
@@ -53,77 +53,59 @@ microAveragePower = picroPower/channelnum  ##微基站的信道平均功率
 channelbandwidth = bandwidth/channelnum  ##每个信道的带宽
 # macroChannelSet = [i for i in xrange(64)]  ##宏基站信道编号
 # picroChannelSet = [i for i in xrange(64)]  ##微基站信道编号
-ChannelSet = [[i for i in xrange((channelnum))] for j in xrange(TotalNum)]#生成基站的信道列表，每一行是一个基站的信道集合 ，第0行代表宏基站
-# for s in ChannelSet:
-#     print s
-# print len(ChannelSet)
+ChannelSet = [[-1 for i in xrange((channelnum))] for j in xrange(TotalNum)]#生成基站的信道列表，每一行是一个基站的信道集合 ，第0行代表宏基站
 
-
-#### 接收用户的坐标位置和基站的坐标位置
-UserX,UserY, BSX,BSY = Draw(samples_num= usernum,R = 500)#接收用户坐标和基站坐标(不包括宏基站)
-
-#初始化一个列表，每一行代表一个基站范围内的用户列表
-BS = [0]*(TotalNum-1)
-
-
-##用户编号与他们到其他基站的距离
-# for k,i,j in zip(userID,UserX,UserY):
-#     PBS1.append(k if distance(i,j,0,0)<=100) 
-#     PBS2.append((k,distance(i,j,250,250))) 
-#     PBS3.append((k,distance(i,j,-250,-250))) 
-#     k = k + 1
-###以用户所在基站范围为标准将用户分类
-for i in xrange(len(BSX)):
-    BS [i] = [(x,y) for x,y in zip(UserX ,UserY) if distance(x, y, BSX[i], BSY[i])<=100]
- 
-temp  =[]
-for i in BS:
-    temp += i
-#过滤掉重复的坐标
-temp = list(set(temp))
-# 最后一行是不在其他基站范围，只在宏基站内的用户坐标
-BS.append([(x,y) for x,y in zip(UserX,UserY) if (x,y) not in temp])
-
-##用户离哪个基站近，哪个基站就优先分配信道给用户满足用户的最低速率要求
-
-######### 信道分配的实现
-"""
-距离用户近的且存在 未分配信道 的基站优先随机分配信道给用户，直到满足用户的最低速率要求，然后分配下一个用户
-用户速率初始值为0,的
-"""
-##UsertoBSList 是一个用户与基站的对应信道的分配表
-UserChannelList = [[]]*usernum
-# print UserChannelList
-
-# for uid in userID:
-#     sumrate = 0
-#     while(sumrate<minRate[uid] and BS1touser):
-#         rate = channelbandwidth*np.log2(1+0)
-#         sumrate += rate
-def interference(BSID,chanID):
-    ##不同基站相同信道才会产生干扰，除此之外只有噪声
+def interfere(BS_n,chan_s):
+    ##不同基站相同信道才会产生干扰，除此之外只有噪声,基站BS_n 在信道chan_s上的干扰
+    interence = 0
+    for i in xrange(len(TotalNum)):#循环基站数量次
+        if(i!=BS_n):##如果
+            pass
+    return interence
     
-    pass
 def sinr(BSid,Userchannellist,chan):###BSid基站类型：0:picoBS;1:MacroBS，已分配信道列表Userchannellist,chan要给用户分配的信道
     
     """
-    信噪比的公式为：r_nks = ptn/(sum(ptm)+ptotal*)
+    信噪比公式 sinr =  P(n,s)*D(n,k)**(-4)/(Interference+Noise)
+    Interference = sum(P(m,s)*D(m,k)**(-4)) if m!=n
+    Noise = P(total)*L(n)/a
+    D(n,k):用户k到链接基站n的距离
+    L(n):基站n的覆盖半径
     """
-    if BSid==0:
+    
+def classifyUser(ux,uy,bsx,bsy,r):
+    '''
+        将用户按照：是否处于某个基站覆盖范围分类,r基站的半径
+    
+    '''
+    if(len(ux)>len(uy)):ux = ux[:len(uy)]
+    elif(len(ux)<len(uy)):uy = uy[:len(ux)]
+    if(len(bsx)>len(bsy)):ux = ux[:len(uy)]
+    elif(len(bsx)<len(bsy)):uy = uy[:len(ux)]
+    #初始化一个列表，每一行代表一个基站范围内的用户列表
+    BSCoverage = []
+    for i in xrange(len(BSX)):##处于两个基站交叉区域的用户会出现在两个基站的list中
+        BSCoverage.append( [(x,y) for x,y in zip(ux ,uy) if distance(x, y, bsx[i], bsy[i])<=r])
+    temp  =[]
+    for i in BSCoverage:
+        temp += i
+    #过滤掉重复的坐标
+    temp = list(set(temp))
+    #筛选只在宏基站内的用户坐标, 最后一行为只分布在宏基站范围内的用户
+    BSCoverage.append([(x,y) for x,y in zip(UserX,UserY) if (x,y) not in temp])
+    return BSCoverage
+    
+#### 接收用户的坐标位置和基站的坐标位置
+UserX,UserY, BSX,BSY = Draw(samples_num= usernum,R = 500)#接收用户坐标和基站坐标(不包括宏基站)
+#调用分类函数将用户按它所在的基站分类
+BSCover = classifyUser(UserX,UserY,BSX,BSY, r=100)
+
+
+
+
+
         
 
-for bs in BS:#已划分区域的用户列表，即，在某个基站范围内的用户列表
-    for xy in bs:#用户列表中的每一个列表
-        R = 0 #初始速率设为0
-        i = BS.index(bs)##记录当前用户列表的下标值
-        L = ChannelSet[i] ##获取当前下标对应的基站的信道列表
-        while(Rmin < R  and len(L)>0):##循环，速率达到最小要求速率值Rmin,信道列表中还有未分配的信道
-            chan = random.choice(L)#从未分配的信道列表中随机选取一个信道编号
-            s = sinr(chan) #求这个信道到用户的信噪比
-            R += channelbandwidth*log2(1+s)##求累加速率
-            L.pop(bs.index(chan))##将已分配的信道弹出信道列表
-            UserChannelList[i].append(xy[0],xy[1],i,chan)##向用户信道列表中添加已经分配的信道，用户和基站编号的信息
-        
     
 
 
