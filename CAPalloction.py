@@ -54,18 +54,9 @@ microAveragePower = picoPower/channelnum  ##微基站的信道平均功率
 channelbandwidth = bandwidth/channelnum  ##每个信道的带宽
 # macroChannelSet = [i for i in xrange(64)]  ##宏基站信道编号
 # picroChannelSet = [i for i in xrange(64)]  ##微基站信道编号
-ChannelSet = [[-1 for i in xrange((channelnum))] for j in xrange(TotalNum)]#生成基站的信道列表，每一行是一个基站的信道集合 ，第0行代表宏基站
+# ChannelSet = [[-1 for i in xrange((channelnum))] for j in xrange(TotalNum)]#生成基站的信道列表，每一行是一个基站的信道集合 ，第0行代表宏基站
  
-def interfere(BS_n,chan_s):
-    '''
-    ##不同基站相同信道才会产生干扰，除此之外只有噪声,基站BS_n 在信道chan_s上的干扰,不同基站只要分配了相同编号的信道，
-    ##无论是否给同一个用户都会相互干扰，只是相同编号的信道分配给同一个用户干扰最大
-    '''
-    interence = 0
-    for i in xrange(len(TotalNum)):#循环基站数量次
-        if(i!=BS_n):##如果
-            pass
-    return interence
+
     
 def sinr(BSid,Userchannellist,chan):###BSid基站类型：0:picoBS;1:MacroBS，已分配信道列表Userchannellist,chan要给用户分配的信道
     
@@ -111,9 +102,25 @@ def getDM(ux,uy,bsx,bsy):
             DM.append(dm)
     else:exit(0)
     return DM
-   
-    
-#### 接收用户的坐标位置和基站的坐标位置
+
+def interfere(n,s,chanlist,BSX,BSY):
+    '''
+    ##不同基站相同信道才会产生干扰，除此之外只有噪声,基站BS_n 在信道chan_s上的干扰,不同基站只要分配了相同编号的信道，
+    ##无论是否给同一个用户都会相互干扰，只是相同编号的信道分配给同一个用户干扰最大
+    chanlist 是信道的分配列表 等同于下面的BSchanAllocate
+    '''
+    interf = 0
+    for i in xrange(len(TotalNum)):#循环基站数量次
+        if(i!=n and chanlist[s]!=-1):##如果不是参数中的基站,且信道已经分配给用户
+            
+            k = chanlist[n][s] #定位连接基站n分配信道s的用户
+            d = distance(k[0],k[1],BSX[i],BSY[i])
+            p = microAveragePower
+            interf += p*(d**(-4))
+                         
+    return interf
+
+# 用户的坐标位置和基站的坐标位置
 UserX,UserY, BSX,BSY = Draw(samples_num= usernum,R = 500)#接收用户坐标和基站坐标(不包括宏基站)
 
 ##基站到用户的距离DM,行代表某个基站，列代表用户
@@ -125,6 +132,8 @@ BSCover = classifyUser(UserX,UserY,BSX,BSY, r=100)
 """
 BSCover 一行代表一个基站 下的所有用户
 """
+BSchanAllocate = [[-1]*channelnum]*TotalNum  ####定义一个信道分配的矩阵，行代表一个基站，列代表基站的信道
+
 for bs in xrange(BSCover):##bs表示当前循环的基站下所有用户的集合bs = [user(0),user(1),user(1),...,user(n)]
     n = BSCover.index(bs)##获取当前基站对应的下标值，以定位当前基站(BSX[n],BSY[n])
     if len(bs)!=0 : ##判断bs中如果有用户的话,且不是最有一个基站，最后一个基站是宏基站
@@ -142,13 +151,28 @@ for bs in xrange(BSCover):##bs表示当前循环的基站下所有用户的集�
             pt = macroAveragePower##宏基站的平均信道功率
             P = macroPower
             radius = 0.5##km
-        Interference = 0 ##干扰
+        Interf = 0 ##干扰
         AvgBand = channelbandwidth##每个信道的平均带宽
         ##利用循环求得
+        '''
+        #初始化一个信道分配矩阵，每一行代表一个基站的信道的分配，未分配的信道记为-1,如果某个信道分配给用户了，则标记为 用户   坐标 
+        BSchanAllocate = [
+        
+        BS0 : [-1,-1,....,-1]
+        BS1 : [-1,-1,....,-1]
+        BS2 : [-1,-1,....,-1]
+        BS3 : [-1,-1,....,-1]
+        BS4 : [-1,-1,....,-1]
+        BS5 : [-1,-1,....,-1]
+        .
+        ]
+        '''
+        
         for user in bs:
             R = []#初始化一个速度列表，当前循环的基站下覆盖的各个用户：假设信道分配给每一个用户的情形下得到的速率
             for j in xrange(channelnum):
-                sinr = pt*(D[bs.index(user)])**(-4)/(Interference + P*radius**(-4)/alpha)
+                Interf = interfere(n, s, chanlist, BSX, BSY)
+                sinr = pt*(D[bs.index(user)])**(-4)/(Interf + P*radius**(-4)/alpha)
                 r = AvgBand*log2(1+sinr)
                 R.append(r)
         
