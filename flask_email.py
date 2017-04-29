@@ -24,22 +24,27 @@ mail = Mail(app)
 
 @app.route('/')
 def index():
-# sender ���ͷ�����recipients �ʼ����շ��б�
+# sender 发送方，recipients邮件接收方列表
     msg = Message("发一张 图片给你看看我的头像，在附件中",sender='hu600hu@163.com', recipients=['976825033@qq.com'])
-# msg.body �ʼ����� 
+# msg.body 邮件正文
     msg.body = "给你发一封测试邮件，用代码写的"
-# msg.attach �ʼ��������
-# msg.attach("�ļ���", "����", ��ȡ�ļ���
-    with app.open_resource("F:\\1.jpg","rb") as fp:
-        msg.attach("image.jpg", "image/jpg", fp.read())
+# msg.attach 邮件附件添加
+# msg.attach("文件名", "类型", 读取文件)
+#     with app.open_resource("F:\\1.jpg","rb") as fp:
+#         msg.attach("image.jpg", "image/jpg", fp.read())
+#     with app.open_resource("F:\\new.docx","rb") as fp:
+#         msg.attach("pic.docx", "txt/docx", fp.read())
+    with app.open_resource("F:\\new.rar","rb") as fp:
+        msg.attach("pic.rar", "zip/rar", fp.read())
 
     try:
         mail.send(msg)
     except Exception,e:
         
+        print "send error"+str(e)
         return "send error"+str(e)
     else:
-        return "Sent"
+        return "Sent successfully"
 
 if __name__ == "__main__":
     app.run()
