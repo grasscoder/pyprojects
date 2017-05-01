@@ -188,15 +188,17 @@ for bs in BSCover:##bs表示当前循环的基站下所有用户的集合bs = [u
             
             ##下一步进行信道的分配，使用的贪心算法，用户选择(或者说基站分配)当前速率值最大的信道
         for userj in bs:
-            j  = bs.index(userj)##获取当前用户的下标(用户坐标不会存在重复)
+            j = bs.index(userj)##获取当前用户的下标(用户坐标不会存在重复)
             Rnow=0##表示用户当下的速率，这样做是有问题的!!!!？？？？？？？
             while(Rnow<Rmin ):##用户速率大于最低速率，
                 if BSchanAllocate[n].count(-1)>0:#当前基站还有未分配的信道
                     Rnow += max(R[j])
                     chanid = R[j].index(max(R[j]))##将当前用户速率值最大值对应的第一个(可能会出现速率并列最大的)信道标号赋值给chanid
-                    for ratei in len(R):
-                        for ratej in len(ratei):
-                            if (ratej!=j and ratei!=chanid):R[m][n]=0
+                    for rm in R:##循环速率矩阵行
+                        row = R.index(rm)#获取行坐标
+                        for rn in rm:
+                            col = rm.index(rn)##获取列坐标
+                            if (row!=j and col!=chanid):R[row][col]=0
                     BSchanAllocate[n][chanid]=userj##在基站n的信道s对应位置写入用户坐标
                 else: 
                     print "All channels are busy"
