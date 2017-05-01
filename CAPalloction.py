@@ -39,7 +39,7 @@ usernum = np.random.randint(20,50)
 macroR = 500.0     ##宏基站的覆盖半径/m
 microR = 100.0     ##微基站的覆盖半径/m
 channelnum = 64    ##信道数量
-bandwidth = 150.0 ##带宽/MHz,w->dbm:dbm = 10log10(w/1mw)=30+10log10(W),#print 40+10*np.log10(15)=51.
+bandwidth = 150.0*(10**3) ##带宽/MHz,w->dbm:dbm = 10log10(w/1mw)=30+10log10(W),#print 40+10*np.log10(15)=51.
 macroPower = 20.0  ##宏基站功率/w
 picoPower = 1.0   ##微基站功率/w
 noisePower = 9.0   ##dB
@@ -109,9 +109,9 @@ def interfere(n,s,chanlist,BSX,BSY):
     '''
     interf = 0
     for i in xrange(len(chanlist)):#循环基站数量次
-        if(i!=n and chanlist[s]!=-1):##如果不是参数中的基站,且信道已经分配给用户(信道值为-1说明：此信道未分配，值为用户坐标说明此信道已经分配给该坐标用户)
+        if(i!=n and chanlist[i][s]!=-1):##如果不是参数中的基站,且信道已经分配给用户(信道值为-1说明：此信道未分配，值为用户坐标说明此信道已经分配给该坐标用户)
             k = chanlist[n][s] #定位连接基站n分配信道s的用户
-            print type(k)
+            
             d = distance(k[0],k[1],BSX[i],BSY[i])
             if i!=(len(chanlist)-1):#最后一个基站为宏基站，如果不是最后一个基站，功率p为微基站功率
                 p = microAveragePower
@@ -121,13 +121,17 @@ def interfere(n,s,chanlist,BSX,BSY):
     return interf
 
 ##基站到用户的距离DM,行代表某个基站，列代表用户
-DM = getDM(UserX,UserY,BSX,BSY)
+# DM = getDM(UserX,UserY,BSX,BSY)
 
 #调用分类函数将用户按它所在的基站分类
 """
     BSCover 一行代表一个基站 下的所有用户
 """
 BSCover = classifyUser(UserX,UserY,BSX,BSY, r=100)
+
+##将用户按照基站的覆盖范围分类之后，将宏基站的坐标加入到基站坐标列表中去
+BSX = BSX + [0]
+BSY = BSY + [0]
    
 '''
         #初始化一个信道分配矩阵，每一行代表一个基站的信道的分配，未分配的信道记为-1,如果某个信道分配给用户了，则标记为 用户   坐标 
@@ -142,108 +146,66 @@ BSCover = classifyUser(UserX,UserY,BSX,BSY, r=100)
         '''
 
 BSchanAllocate = [[-1]*channelnum]*TotalNum  ####定义一个信道分配的矩阵，行代表一个基站，列代表基站的信道
+userRateDict = {}##用户速率表，记录的是用户当前信道分配条件下获得的速率值
 
+n = 0##由于list会出现多个相同值(基站范围内不一定总是存在用户)取下标得到第一此出现的值，故循环n,作为全局的控制变量
 for bs in BSCover:##bs表示当前循环的基站下所有用户的集合bs = [user(0),user(1),user(1),...,user(n)]
-    n = BSCover.index(bs)##获取当前基站对应的下标值，以定位当前基站(BSX[n],BSY[n])
-    if len(bs)!=0 : ##判断bs中如果有用户的话,且不是最有一个基站，最后一个基站是宏基站
-        ##求得基站范围内的用户与当前基站的距离
-        D = []
-        for useri in bs:
-            d = distance(useri[0],useri[1],BSX[n],BSY[n])
-            D.append(d)
-        
+#     n = BSCover.index(bs)##获取当前基站对应的下标值，以定位当前基站(BSX[n],BSY[n]),问题是：当出现多个空集时，index()的值是第一次出的下标值
+    
+    if len(bs) > 0 : ##判断bs中如果有用户的话,且不是最有一个基站，最后一个基站是宏基站
+        ##初始化计算基站信息的数据
         if n!=(len(BSCover)-1): 
             pt = microAveragePower###微基站的平均信道功率
             P = picoPower  ##基站总共功率
-            radius = 0.1##km
+            radius = 100##m
         else:
             pt = macroAveragePower##宏基站的平均信道功率
             P = macroPower
-            radius = 0.5##km
-        Interf = 0 ##干扰
+            radius = 500##m
+#         Interf = 0 ##干扰
         AvgBand = channelbandwidth##每个信道的平均带宽
-        ##利用循环求得
         
+        ##求得基站范围内的用户与当前基站的距离
+        D = []
+        for useri in bs:#循环当前基站中用户数量次
+            d = distance(useri[0],useri[1],BSX[n],BSY[n])
+            D.append(d)##得到当前基站下的用户与当前基站距离的列表
+        
+        ##利用循环求当前基站下：每一个用户与所有信道连接条件下可获得的用户速率
         for user in bs:
-            R = []#初始化一个速度列表，当前循环的基站下覆盖的各个用户：假设信道分配给每一个用户的情形下得到的速率
+#             R = []#初始化一个速度列表，当前循环的基站下覆盖的各个用户：假设信道分配给每一个用户的情形下得到的速率
+            R = []#初始化一个速度矩阵，一行代表当前基站下用户与所有信道的链接所获得速率值列表，列代表信道
+            
             for j in xrange(channelnum):
+                r = []
                 Interf = interfere(n, j, BSchanAllocate, BSX, BSY)##n表示的是基站，j 是信道，chanlist是信道分配的列表
                 sinr = pt*(D[bs.index(user)])**(-4)/(Interf + P*radius**(-4)/alpha)##求sinr
-                r = AvgBand*log2(1+sinr)
+                rate = AvgBand*log2(1+sinr)
                 ##将得到的速率值r，追加到当前 用户速度一维列表中,
                 #每一个速率值对应一个信道:R =[r0,r1,r2,..]
-                R.append(r) 
+                r.append(rate)
+            R.append(r) 
+            
             ##下一步进行信道的分配，使用的贪心算法，用户选择(或者说基站分配)当前速率值最大的信道
-            Rnow=0##表示用户当下的速率
-            while(Rnow<Rmin):
-                Rnow += max(R) 
-                chanid = R.index(max(R))##将当前用户速率值最大值对应的第一个(可能会出现速率并列最大的)信道标号赋值给chanid
-                BSchanAllocate[n][chanid]=user##在基站n的信道s对应位置写入用户坐标
+        for userj in bs:
+            j  = bs.index(userj)##获取当前用户的下标(用户坐标不会存在重复)
+            Rnow=0##表示用户当下的速率，这样做是有问题的!!!!？？？？？？？
+            while(Rnow<Rmin ):##用户速率大于最低速率，
+                if BSchanAllocate[n].count(-1)>0:#当前基站还有未分配的信道
+                    Rnow += max(R[j])
+                    chanid = R[j].index(max(R[j]))##将当前用户速率值最大值对应的第一个(可能会出现速率并列最大的)信道标号赋值给chanid
+                    for ratei in len(R):
+                        for ratej in len(ratei):
+                            if (ratej!=j and ratei!=chanid):R[m][n]=0
+                    BSchanAllocate[n][chanid]=userj##在基站n的信道s对应位置写入用户坐标
+                else: 
+                    print "All channels are busy"
+                    exit(0)
+    n=n+1    
         
-        
-'''
---------------------------------------------类  分 界  线--------------------------------------------
 
-'''
-class BS(object):
-    """定义一个抽象 基站类"""
-    def __init__(self,channelnum,totalpower,coverage,dtoAlluser):
-        """channelnum信道数量   totalPower基站总功率，Coverage基站覆盖范围半径 ,dtoAlluser基站到各个用户的距离列表
-        #是一个列表，每一列代表:当前基站与用户(用户编号用列表中对应的下标表示)的距离
-        dtoAlluser[i]#表示当前基站到用户i的距离
-        """
-        self.channelnum = channelnum #信道数量
-        self.totalpower = totalpower ##基站总功率
-        self.channelpower = [0]*channelnum ##每条信道的功率初始化为0
-        self.coverage = coverage #基站的覆盖半径
-        self.dtoAlluser = dtoAlluser #基站到所有用户的距离列表
-        self.underCover = [] ##在当前基站覆盖下的用户集合列表
-        
-    def getuser(self):#获取在当前基站下的用户集合
-        """得到当前基站覆盖范围内的用户"""
-        
-        for d in xrange(len(self.dtoAlluser)):##在距离列表中，按其长度做循环
-            if self.dtoAlluser[d] <= self.coverage:##判断距离小于基站覆盖半径
-                self.underCover.append(d)#把用户编号追加到当前基站的用户列表中去
-        return self.underCover
-    
-    def userintwo(self):
-        """处于两个基站交叉区域的用户"""
-        pass
-    
-    def interence(self):
-        #同一个基站分配信道，所以不存在不同基站的相同信道的干扰。只有噪声
-        inter = 0
-        return inter
-    
-    def userRate(self):
-        #当前基站范围内的用户与当前基站的所有信道的速率
-        R = [[0]]
-        p = self.totalpower/channelnum
-        N = 9.0
-        Interfe = self.interfere()
-        for i in self.underCover:##当前基站的用户数量作为外循环，i表示用户编号
-            r = []
-            for j in xrange(channelnum):#以当前的基站信道数量作为内循环
-                r.append(p*(self.dtoAlluser[i])**(-4)/(Interfe+N))
-            R.append(r)    
-        return R
-      
-    def chanAllocate(self):
-        '''只为只在当前基站中的用户分配信道，如果出现基站交叉范围共存的用户先不管，依旧按照本基站的原则分配信道'''
-        R = self.userRate()## R每一行代表：一个用户与当前基站所有信道的速率值 
-        for i in self.underCover:##按用户分配信道
-            pass
-
-class User(object):
-    """定义一个用户类"""
-    def __init__(self):#初始化
-        self.chanNum = 0   ##用户占用的信道数量
-        self.inBScover = [] ##用户所在的基站,如果在多个基站交叉区域，则列表中会出现他所在的所有基站
-        self.chanlist = [] ##用户占用的信道列表，实际上应该是一个矩阵，每一行代表占用的一个基站的信道
-        self.rate = 0
-        self.Rmin = 1200 #kbps
-        
 if __name__=="__main__":
-    print BSchanAllocate
+    print "\n"
+    for i in BSchanAllocate:
+        print i
     

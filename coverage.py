@@ -65,7 +65,7 @@ def PicoCircle(range1,range2,num=6):
 #     for i in xrange(1,len(x)):
 #         DrawCircle(100, x[i], y[i], "g--", BSname+str(i), "k^")
     return xp[1:],yp[1:]    #返回 除宏基站的坐标之外的值 生成的 x,y list 的值
-
+'''
 def Relays(xp,yp,num=2):
     """
             中继节点的数量默认为2个，不会产生两次或者多次调用产生不同结果的效果，因为relays函数是以原pico基站的结果作为参数的
@@ -92,6 +92,7 @@ def Relays(xp,yp,num=2):
 #     print xp,yp
 #     print xp[-num:],yp[-num:]
 
+
 def Femto(xR,yR,num):
     """
     
@@ -115,7 +116,7 @@ def Femto(xR,yR,num):
                 xR.pop()
                 yR.pop()
     return xR[-num:],yR[-num:]
-    
+'''    
     
        
     
