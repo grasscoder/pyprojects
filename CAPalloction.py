@@ -165,32 +165,36 @@ for bs in BSCover:##bs表示当前循环的基站下所有用户的集合bs = [u
 #         Interf = 0 ##干扰
         AvgBand = channelbandwidth##每个信道的平均带宽
         
-        ##求得基站范围内的用户与当前基站的距离
+        ##求当前基站范围内的用户与当前基站的距离
         D = []
         for useri in bs:#循环当前基站中用户数量次
             d = distance(useri[0],useri[1],BSX[n],BSY[n])
             D.append(d)##得到当前基站下的用户与当前基站距离的列表
         
         ##利用循环求当前基站下：每一个用户与所有信道连接条件下可获得的用户速率
+        R = []#初始化一个速度矩阵，一行代表当前基站下用户与所有信道的链接所获得速率值列表，列代表信道
         for user in bs:
 #             R = []#初始化一个速度列表，当前循环的基站下覆盖的各个用户：假设信道分配给每一个用户的情形下得到的速率
-            R = []#初始化一个速度矩阵，一行代表当前基站下用户与所有信道的链接所获得速率值列表，列代表信道
-            
+            r = []
             for j in xrange(channelnum):
-                r = []
+                
                 Interf = interfere(n, j, BSchanAllocate, BSX, BSY)##n表示的是基站，j 是信道，chanlist是信道分配的列表
                 sinr = pt*(D[bs.index(user)])**(-4)/(Interf + P*radius**(-4)/alpha)##求sinr
                 rate = AvgBand*log2(1+sinr)
                 ##将得到的速率值r，追加到当前 用户速度一维列表中,
                 #每一个速率值对应一个信道:R =[r0,r1,r2,..]
                 r.append(rate)
-            R.append(r) 
-            
+            R.append(r)
+        print R
+        print len(R[0])
+        
             ##下一步进行信道的分配，使用的贪心算法，用户选择(或者说基站分配)当前速率值最大的信道
+        
         for userj in bs:
             j = bs.index(userj)##获取当前用户的下标(用户坐标不会存在重复)
+            
             Rnow=0##表示用户当下的速率，这样做是有问题的!!!!？？？？？？？
-            while(Rnow<Rmin ):##用户速率大于最低速率，
+            while(Rnow < Rmin):##用户速率大于最低速率，
                 if BSchanAllocate[n].count(-1)>0:#当前基站还有未分配的信道
                     Rnow += max(R[j])
                     chanid = R[j].index(max(R[j]))##将当前用户速率值最大值对应的第一个(可能会出现速率并列最大的)信道标号赋值给chanid
@@ -208,6 +212,6 @@ for bs in BSCover:##bs表示当前循环的基站下所有用户的集合bs = [u
 
 if __name__=="__main__":
     print "\n"
-    for i in BSchanAllocate:
-        print i
+#     for i in BSchanAllocate:
+#         print i
     
