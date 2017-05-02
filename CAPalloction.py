@@ -177,7 +177,8 @@ for bs in BSCover:##bs表示当前循环的基站下所有用户的集合bs = [u
 #             R = []#初始化一个速度列表，当前循环的基站下覆盖的各个用户：假设信道分配给每一个用户的情形下得到的速率
             r = []
             for j in xrange(channelnum):
-                
+                '''这样做会出现一个问题：当前用户对应基站的所有信道得到的速率值是一样的，因功率是平均功率，距离是固定的，刚开始分配时先分配的基站不存在干扰，
+                                            后续分配的基站产生干扰，因此得到的速率矩阵的每一行都是由相同的值组成的'''
                 Interf = interfere(n, j, BSchanAllocate, BSX, BSY)##n表示的是基站，j 是信道，chanlist是信道分配的列表
                 sinr = pt*(D[bs.index(user)])**(-4)/(Interf + P*radius**(-4)/alpha)##求sinr
                 rate = AvgBand*log2(1+sinr)
@@ -185,8 +186,8 @@ for bs in BSCover:##bs表示当前循环的基站下所有用户的集合bs = [u
                 #每一个速率值对应一个信道:R =[r0,r1,r2,..]
                 r.append(rate)
             R.append(r)
-        print R
-        print len(R[0])
+#         print R
+#         print len(R[0])
         
             ##下一步进行信道的分配，使用的贪心算法，用户选择(或者说基站分配)当前速率值最大的信道
         
@@ -196,14 +197,16 @@ for bs in BSCover:##bs表示当前循环的基站下所有用户的集合bs = [u
             Rnow=0##表示用户当下的速率，这样做是有问题的!!!!？？？？？？？
             while(Rnow < Rmin):##用户速率大于最低速率，
                 if BSchanAllocate[n].count(-1)>0:#当前基站还有未分配的信道
+                    
                     Rnow += max(R[j])
                     chanid = R[j].index(max(R[j]))##将当前用户速率值最大值对应的第一个(可能会出现速率并列最大的)信道标号赋值给chanid
-                    for rm in R:##循环速率矩阵行
-                        row = R.index(rm)#获取行坐标
-                        for rn in rm:
-                            col = rm.index(rn)##获取列坐标
-                            if (row!=j and col!=chanid):R[row][col]=0
                     BSchanAllocate[n][chanid]=userj##在基站n的信道s对应位置写入用户坐标
+                    for rm in xrange(len(R)):##循环速率矩阵行
+                        #row = R.index(rm)#获取行坐标
+                        for rn in xrange(len(R[j])):
+#                             col = rm.index(rn)##获取列坐标
+                            if (rm!=j and rn!=chanid):R[rm][rn]=0
+                    
                 else: 
                     print "All channels are busy"
                     exit(0)
@@ -212,6 +215,8 @@ for bs in BSCover:##bs表示当前循环的基站下所有用户的集合bs = [u
 
 if __name__=="__main__":
     print "\n"
-#     for i in BSchanAllocate:
-#         print i
+    for i in BSchanAllocate:
+        print i
+        
+    print len(BSchanAllocate[0])-BSchanAllocate[0].count(-1)
     
