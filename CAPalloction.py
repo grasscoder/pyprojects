@@ -178,29 +178,32 @@ def channelAllocate(BSCover):
                     #每一个速率值对应一个信道:R =[r0,r1,r2,..]
                     
                 R.append(r)
-            print len(R)
+            #print len(R)
             
             """第二步：进行信道的分配，使用的贪心算法，用户选择(或者说基站分配)当前速率值最大的信道"""
             for userj in bs:
                 j = bs.index(userj)##获取当前用户的下标(用户坐标不存在两个相同的)
-    
+                print "基站编号: %d"%(n)
+                
                 Rnow=0##表示用户当下的速率，这样做是有问题的!!!!？？？？？？？
                 while(Rnow < Rmin):##用户速率大于最低速率，
                     if BSchanAllocate[n].count(-1)>0:#当前基站还有未分配的信道，还有一个else，如果当前基站的信道数量不够该如何处理
                         Rnow += max(R[j])
                         chanid = R[j].index(max(R[j]))##将当前用户速率值最大值对应的第一个(可能会出现速率并列最大的)信道标号赋值给chanid
                         BSchanAllocate[n][chanid]=userj##在基站n的信道s对应位置写入用户坐标
+                        print "channelid:%d user:%s"%(chanid,userj)
                         
                         for rm in xrange(len(R)):##循环速率矩阵行，将本基站其他用户对应这条信道的速率设置为0
     #                         row = R.index(rm)#获取行坐标
                             for rn in xrange(len(R[j])):
     #                             col = rm.index(rn)##获取列坐标
-                                if (rm!=j and rn==chanid):R[rm][rn]=0##将已经分配的信道对应其他用户的速率矩阵位置设置为0，表示此信道已经分配不能再分配其他人
-    #                     
+                                if (rn==chanid):R[rm][rn]=0##将已经分配的信道对应其他用户的速率矩阵位置设置为0，表示此信道已经分配不能再分配其他人
+                                  
                     else: ###如果当前基站的信道已经分配完毕，暂时输出下面的字符串，后续会继续处理这种情况
                         
                         print "All channels are busy"
                         exit(0)
+            print "\n"
         n=n+1 ##当前基站的分配完毕，n+1进入下一个基站的额信道分配
            
     return BSchanAllocate    
@@ -219,73 +222,4 @@ if __name__=="__main__":
     for i in BSchanAllocate:
         print i
                 
-=======
-    if len(bs) > 0 : ##判断bs中如果有用户的话,且不是最有一个基站，最后一个基站是宏基站
-        ##初始化计算基站信息的数据
-        if n!=(len(BSCover)-1): 
-            pt = microAveragePower###微基站的平均信道功率
-            P = picoPower  ##基站总共功率
-            radius = 100##m
-        else:
-            pt = macroAveragePower##宏基站的平均信道功率
-            P = macroPower
-            radius = 500##m
-#         Interf = 0 ##干扰
-        AvgBand = channelbandwidth##每个信道的平均带宽
-        
-        ##求当前基站范围内的用户与当前基站的距离
-        D = []
-        for useri in bs:#循环当前基站中用户数量次
-            d = distance(useri[0],useri[1],BSX[n],BSY[n])
-            D.append(d)##得到当前基站下的用户与当前基站距离的列表
-        
-        ##利用循环求当前基站下：每一个用户与所有信道连接条件下可获得的用户速率
-        R = []#初始化一个速度矩阵，一行代表当前基站下用户与所有信道的链接所获得速率值列表，列代表信道
-        for user in bs:
-#             R = []#初始化一个速度列表，当前循环的基站下覆盖的各个用户：假设信道分配给每一个用户的情形下得到的速率
-            r = []
-            for j in xrange(channelnum):
-                '''这样做会出现一个问题：当前用户对应基站的所有信道得到的速率值是一样的，因功率是平均功率，距离是固定的，刚开始分配时先分配的基站不存在干扰，
-                                            后续分配的基站产生干扰，因此得到的速率矩阵的每一行都是由相同的值组成的'''
-                Interf = interfere(n, j, BSchanAllocate, BSX, BSY)##n表示的是基站，j 是信道，chanlist是信道分配的列表
-                sinr = pt*(D[bs.index(user)])**(-4)/(Interf + P*radius**(-4)/alpha)##求sinr
-                rate = AvgBand*log2(1+sinr)
-                ##将得到的速率值r，追加到当前 用户速度一维列表中,
-                #每一个速率值对应一个信道:R =[r0,r1,r2,..]
-                r.append(rate)
-            R.append(r)
-#         print R
-#         print len(R[0])
-        
-            ##下一步进行信道的分配，使用的贪心算法，用户选择(或者说基站分配)当前速率值最大的信道
-        
-        for userj in bs:
-            j = bs.index(userj)##获取当前用户的下标(用户坐标不会存在重复)
-            
-            Rnow=0##表示用户当下的速率，这样做是有问题的!!!!？？？？？？？
-            while(Rnow < Rmin):##用户速率大于最低速率，
-                if BSchanAllocate[n].count(-1)>0:#当前基站还有未分配的信道
-                    
-                    Rnow += max(R[j])
-                    chanid = R[j].index(max(R[j]))##将当前用户速率值最大值对应的第一个(可能会出现速率并列最大的)信道标号赋值给chanid
-                    BSchanAllocate[n][chanid]=userj##在基站n的信道s对应位置写入用户坐标
-                    for rm in xrange(len(R)):##循环速率矩阵行
-                        #row = R.index(rm)#获取行坐标
-                        for rn in xrange(len(R[j])):
-#                             col = rm.index(rn)##获取列坐标
-                            if (rm!=j and rn!=chanid):R[rm][rn]=0
-                    
-                else: 
-                    print "All channels are busy"
-                    exit(0)
-    n=n+1    
-        
-
-if __name__=="__main__":
-    print "\n"
-    for i in BSchanAllocate:
-        print i
-        
-    print len(BSchanAllocate[0])-BSchanAllocate[0].count(-1)
->>>>>>> e3f12020d4e3a98ad90a9ce41a00f670cd5f2fc8
     
