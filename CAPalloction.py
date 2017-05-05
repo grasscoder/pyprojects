@@ -121,7 +121,7 @@ def interfere(n,s,chanlist,bsx,bsy):
         for i in xrange(len(chanlist)):#循环基站数量次
             if(i!=n and chanlist[i][s]!=-1):##如果不是参数中的基站,且信道已经分配给用户(信道值为-1说明：此信道未分配，值为用户坐标说明此信道已经分配给该坐标用户)
                 k = chanlist[n][s] #定位连接基站n分配信道s的用户
-                print "k=%d"%k
+#                 print "k=%s"%k
                 d = distance(k[0],k[1],bsx[i],bsy[i])
                 if i!=(len(chanlist)-1):#最后一个基站为宏基站，如果不是最后一个基站，功率p为微基站功率
                     p = microAveragePower
@@ -225,20 +225,20 @@ def channelAllocate(BSCover,bsx,bsy):
             
             """第二步：进行信道的分配，使用的贪心算法，用户选择(或者说基站分配)当前速率值最大的信道"""
             for userj in xrange(len(BSCover[n])):
-                j = userj##获取当前用户的下标(用户坐标不存在两个相同的)
+#                 j = userj##获取当前用户的下标(用户坐标不存在两个相同的)
                 print "基站编号: %d"%(n)
                 
-                Rnow=RateNow(BSchanAllocate, BSCover[n][j], bsx, bsy)##表示用户当下的速率，已改正【【【应该从信道分配list中获取当前用户的当前速率，刚开始用户的求得速率值为0】】】 
+                Rnow=RateNow(BSchanAllocate, BSCover[n][userj], bsx, bsy)##表示用户当下的速率，已改正【【【应该从信道分配list中获取当前用户的当前速率，刚开始用户的求得速率值为0】】】 
                 while(Rnow < Rmin):##用户速率大于最低速率，
                     if BSchanAllocate[n].count(-1)>0:#当前基站还有未分配的信道，还有一个else，如果当前基站的信道数量不够该如何处理
-                        Rnow += max(R[j])
-                        chanid = R[j].index(max(R[j]))##将当前用户速率值最大值对应的第一个(可能会出现速率并列最大的)信道标号赋值给chanid
-                        BSchanAllocate[n][chanid]=userj##在基站n的信道s对应位置写入用户坐标
-                        print "channelid:%d user:%s"%(chanid,userj)
+                        Rnow += max(R[userj])
+                        chanid = R[userj].index(max(R[userj]))##将当前用户速率值最大值对应的第一个(可能会出现速率并列最大的)信道标号赋值给chanid
+                        BSchanAllocate[n][chanid]=BSCover[n][userj]##在基站n的信道s对应位置写入用户坐标
+                        print "channelid:%d occupied by user:%s"%(chanid,BSCover[n][userj])
                         
                         for rm in xrange(len(R)):##循环速率矩阵行，将本基站其他用户对应这条信道的速率设置为0
     #                         row = R.index(rm)#获取行坐标
-                            for rn in xrange(len(R[j])):
+                            for rn in xrange(len(R[userj])):
     #                             col = rm.index(rn)##获取列坐标
                                 if (rn==chanid):R[rm][rn]=0##将已经分配的信道对应其他用户的速率矩阵位置设置为0，表示此信道已经分配不能再分配其他人
                                   
@@ -266,8 +266,8 @@ if __name__=="__main__":
 #     print "sum user:%d"%s
 
      
-#     BSchanAllocate = channelAllocate(BSCover)
-#     for i in BSchanAllocate:
-#         print i
+    BSchanAllocate = channelAllocate(BSCover,BSX,BSY)
+    for i in BSchanAllocate:
+        print i
                 
     
