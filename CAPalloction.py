@@ -107,25 +107,30 @@ def getDM(ux,uy,bsx,bsy):
     else:exit(0)
     return DM
 
-def interfere(n,s,chanlist,bsx=BSX,bsy=BSY):
+def interfere(n,s,chanlist,bsx,bsy):
     '''
     ##不同基站相同信道才会产生干扰，除此之外只有噪声,基站BS_n 在信道chan_s上的干扰,不同基站只要分配了相同编号的信道，
     ##无论是否给同一个用户都会相互干扰，只是相同编号的信道分配给同一个用户干扰最大
-    chanlist 是信道的分配列表 等同于下面的BSchanAllocate，已分配信道是用用户坐标表示的，未分配信道值为-1
+    chanlist 是信道的分配矩阵 等同于下面的BSchanAllocate，已分配信道的位置将-1修改为用用户坐标(UserX,UserY)，未分配信道值为-1
+    
+         信道分配矩阵的每一行必须与基站坐标的每一行对应起来，最后一行是宏基站的信道分配
     '''
-    BSX +=[0]
-    BSY +=[0]
+    
     interf = 0
-    for i in xrange(len(chanlist)):#循环基站数量次
-        if(i!=n and chanlist[i][s]!=-1):##如果不是参数中的基站,且信道已经分配给用户(信道值为-1说明：此信道未分配，值为用户坐标说明此信道已经分配给该坐标用户)
-            k = chanlist[n][s] #定位连接基站n分配信道s的用户
-            
-            d = distance(k[0],k[1],bsx[i],bsy[i])
-            if i!=(len(chanlist)-1):#最后一个基站为宏基站，如果不是最后一个基站，功率p为微基站功率
-                p = microAveragePower
-            else:  #否则为宏基站功率
-                p = macroAveragePower
-            interf += p*(d**(-4))
+    if (len(chanlist)==len(bsx)):###必须保证信道分配矩阵 的行数与基站的数量相同，便于计算距离获取基站的坐标值
+        for i in xrange(len(chanlist)):#循环基站数量次
+            if(i!=n and chanlist[i][s]!=-1):##如果不是参数中的基站,且信道已经分配给用户(信道值为-1说明：此信道未分配，值为用户坐标说明此信道已经分配给该坐标用户)
+                k = chanlist[n][s] #定位连接基站n分配信道s的用户
+                print "k=%d"%k
+                d = distance(k[0],k[1],bsx[i],bsy[i])
+                if i!=(len(chanlist)-1):#最后一个基站为宏基站，如果不是最后一个基站，功率p为微基站功率
+                    p = microAveragePower
+                else:  #否则为宏基站功率
+                    p = macroAveragePower
+                interf += p*(d**(-4))
+    else:
+        print "function interfere len(BS)!=len(chanlist)"
+        exit(0)
     return interf
 
 ##基站到用户的距离DM,行代表某个基站，列代表用户
@@ -147,40 +152,42 @@ def interfere(n,s,chanlist,bsx=BSX,bsy=BSY):
         BS5 : [-1,-1,....,-1]
         ]
         '''
-def RateNow(chanlist,user,bsx=BSX,bsy=BSY):
+def RateNow(chanlist,user,bsx,bsy):
     """
            根据当前的用户分配求当前用户的速率 ,BSchanAllocate是信道分配列表，user表示要获取速率的用户
     """
-    BSX +=[0]
-    BSY +=[0]
+   
     rate = 0##初始速率设置为0
-    for BSn in xrange(len(chanlist)):##以信道分配的矩阵长度作为循环次数
-        AvgBand = channelbandwidth
-        if BSn!=(len(chanlist)-1):
-            pt = pt = microAveragePower###微基站的平均信道功率
-            P = picoPower  ##基站总共功率
-            radius = 100##m
-        else:
-            pt =macroAveragePower###微基站的平均信道功率
-            P = macroPower  ##基站总共功率
-            radius = 500##m
-            
-        for userindex in xrange(len(chanlist[BSn])):##第BSn个基站信道长度做循环次数
-            if user == chanlist[BSn][userindex]:###判断用户是否在当前循环基站分配了信道
-                Interf = interfere(BSn, userindex, chanlist, bsx, bsy)##求干扰
-                d = distance(user[0],user[1],bsx[BSn],bsy[BSn])###求用户与基站的距离
-                sinr = pt*(d)**(-4)/(Interf + P*radius**(-4)/alpha)##求信噪比sinr
-                rate += AvgBand*log2(1+sinr)
-    
+    if (len(chanlist)==len(bsx)):
+        for BSn in xrange(len(chanlist)):##以信道分配的矩阵长度作为循环次数
+            AvgBand = channelbandwidth
+            if BSn!=(len(chanlist)-1):
+                pt =  microAveragePower###微基站的平均信道功率
+                P = picoPower  ##基站总共功率
+                radius = 100##m
+            else:
+                pt =macroAveragePower###微基站的平均信道功率
+                P = macroPower  ##基站总共功率
+                radius = 500##m
+                
+            for userindex in xrange(len(chanlist[BSn])):##第BSn个基站信道长度做循环次数
+                if user == chanlist[BSn][userindex]:###判断用户是否在当前循环基站分配了信道
+                    Interf = interfere(BSn, userindex, chanlist, bsx, bsy)##求干扰
+                    d = distance(user[0],user[1],bsx[BSn],bsy[BSn])###求用户与基站的距离
+                    sinr = pt*(d)**(-4)/(Interf + P*radius**(-4)/alpha)##求信噪比sinr
+                    rate += AvgBand*log2(1+sinr)
+    else: 
+        print "function RateNow : len(bsx)!=len(chanlist)"
+        print "len(bsx)=%d,len(chanlist)=%d"%(len(bsx),len(chanlist))
+        exit(0)
     return rate
     
 
-def channelAllocate(BSCover,bsx=BSX,bsy=BSY):
+def channelAllocate(BSCover,bsx,bsy):
     """
     
     """
-    BSX=BSX+[0]
-    BSY=BSY+[0]
+    
     BSchanAllocate = [[-1]*channelnum]*TotalNum  ####定义一个信道分配的矩阵，行代表一个基站，列代表基站的信道
 
     for n in xrange(len(BSCover)):##n表示当前循环的基站下所有用户的集合编号
@@ -205,7 +212,7 @@ def channelAllocate(BSCover,bsx=BSX,bsy=BSY):
                 r = []
                 for j in xrange(channelnum):
                     
-                    Interf = interfere(n, j, BSchanAllocate, BSX, BSY)##n表示的是基站，j 是信道，chanlist是信道分配的列表
+                    Interf = interfere(n, j, BSchanAllocate, bsx, bsy)##n表示的是基站，j 是信道，chanlist是信道分配的列表
 #                     sinr = pt*(D[bs.index(user)])**(-4)/(Interf + P*radius**(-4)/alpha)##求sinr
                     sinr = pt*(d)**(-4)/(Interf + P*radius**(-4)/alpha)##求sinr
                     rate = AvgBand*log2(1+sinr)
@@ -221,7 +228,7 @@ def channelAllocate(BSCover,bsx=BSX,bsy=BSY):
                 j = userj##获取当前用户的下标(用户坐标不存在两个相同的)
                 print "基站编号: %d"%(n)
                 
-                Rnow=RateNow(BSchanAllocate, BSCover[n][j], BSX, BSY)##表示用户当下的速率，已改正【【【应该从信道分配list中获取当前用户的当前速率，刚开始用户的求得速率值为0】】】 
+                Rnow=RateNow(BSchanAllocate, BSCover[n][j], bsx, bsy)##表示用户当下的速率，已改正【【【应该从信道分配list中获取当前用户的当前速率，刚开始用户的求得速率值为0】】】 
                 while(Rnow < Rmin):##用户速率大于最低速率，
                     if BSchanAllocate[n].count(-1)>0:#当前基站还有未分配的信道，还有一个else，如果当前基站的信道数量不够该如何处理
                         Rnow += max(R[j])
@@ -245,8 +252,11 @@ def channelAllocate(BSCover,bsx=BSX,bsy=BSY):
     return BSchanAllocate    
 
 if __name__=="__main__":
-    
+   
     BSCover = classifyUser(r=100)
+   
+    BSX = BSX+[0]
+    BSY = BSY+[0]
     ##将用户按照基站的覆盖范围分类之后，将宏基站的坐标加入到基站坐标列表中去
 #     s = 0
 #     for i in BSCover:
@@ -255,9 +265,9 @@ if __name__=="__main__":
 #         print "len(i)=%d"%len(i)
 #     print "sum user:%d"%s
 
-    for i in [0,1]:  
-        BSchanAllocate = channelAllocate(BSCover)
-        for i in BSchanAllocate:
-            print i
+     
+#     BSchanAllocate = channelAllocate(BSCover)
+#     for i in BSchanAllocate:
+#         print i
                 
     
