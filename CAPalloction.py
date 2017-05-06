@@ -116,7 +116,7 @@ def interfere(n,s,chanlist,bsx,bsy):
          信道分配矩阵的每一行必须与基站坐标的每一行对应起来，最后一行是宏基站的信道分配
     '''
     
-    interf = 0
+    interf = 0.0
     if (len(chanlist)==len(bsx)):###必须保证信道分配矩阵 的行数与基站的数量相同，便于计算距离获取基站的坐标值
         for i in xrange(len(chanlist)):#循环基站数量次
             if(i!=n and chanlist[i][s]!=-1):##如果不是参数中的基站,且信道已经分配给用户(信道值为-1说明：此信道未分配，值为用户坐标说明此信道已经分配给该坐标用户)
@@ -128,10 +128,8 @@ def interfere(n,s,chanlist,bsx,bsy):
                 else:  #否则为宏基站功率
                     p = macroAveragePower
                 interf += p*(d**(-4))
-    else:
-        print "function interfere len(BS)!=len(chanlist)"
-        exit(0)
-    return interf
+    
+        return interf
 
 ##基站到用户的距离DM,行代表某个基站，列代表用户
 # DM = getDM(UserX,UserY,BSX,BSY)
@@ -182,16 +180,44 @@ def RateNow(chanlist,user,bsx,bsy):
         exit(0)
     return rate
     
+def userChanRate(userlist,chanlist,bsxi,bsyi):
+    '''----------------由于求信噪比所需基站编号n无法得到，所以放弃此方法---------------'''
+#     '''
+#     userlist 只是一个基站包含多个用户的列表，是一维列表；chanlist是信道分配的列表就是下面代码中引用的BSchanAllocate 矩阵
+#     bsxi,bsyi是分别是基站的坐标位置，只是一个点
+#     给定一个基站下的用户组合列表，输出每个用户对应每一条信道的速率矩阵。有多少个用户速率矩阵就有多少行，
+#     每行64个元素代表每个信道对应某个用户的速率值
+#     '''
+#     R = []#初始化一个速度矩阵，一行代表当前基站下一个用户与所有信道的链接所获得速率值列表，列代表信道
+#     for userindex in xrange(len(userlist)):##userindex表示对应用户的下标值
+#         d = distance(userlist[userindex][0],userlist[userindex][1],bsxi,bsyi)## 用户与当前基站的距离
+#         r = []
+#         for j in xrange(channelnum):
+#             Interf = interfere(n, j, BSchanAllocate, bsx, bsy)##n表示的是基站，j 是信道，chanlist是信道分配的列表
+# #           print "Interf=%.2f"%Interf
+#             sinr = pt*(d)**(-4)/(Interf + P*radius**(-4)/alpha)##求sinr
+#             rate = AvgBand*log2(1+sinr)
+#             r.append(rate)
+#                 ##将得到的速率值r，追加到当前 用户速度一维列表中,
+#                 #每一个速率值对应一个信道:R[i] =[r0,r1,r2,..]
+#         R.append(r)###最后得到的R速率矩阵，跟当前基站内用户数量直接相关，
+    pass
+    
+    
 
 def channelAllocate(BSCover,bsx,bsy):
     """
-    
+   BSCover:用户分类的列表，bsx,bsy表示的是基站的坐标（）这个坐标必须包括宏基站坐标       
+          对基站 范围内的用户进行信道分配，每一分配一个基站内的用户，初始化一个信道分配的列表，如果对应基站的信道分配给用户，则在这个基站对应的新到位置写入用户的坐标
+    首先初始化一个信道矩阵，每一行代表一个基站(一共11个基站，宏基站在最后进行分配，所以n的值[0,10])         
     """
-    
+    if len(BSCover)!=len(bsx):
+        print "channelAllocate Needs len(BSCover)==len(bsx,bsy)"
+        exit(0)
     BSchanAllocate = [[-1]*channelnum]*TotalNum  ####定义一个信道分配的矩阵，行代表一个基站，列代表基站的信道
 
-    for n in xrange(len(BSCover)):##n表示当前循环的基站下所有用户的集合编号
-    
+    for n in xrange(len(BSCover)):##n表示当前循环的基站下相应所有用户集合的编号，即基站编号
+        '''第一步：初始化一些后续步骤所所需的量'''
         if len(BSCover[n]) > 0 : ##当前编号对应的基站中如果有用户的话，继续执行
             ##初始化计算基站信息的数据
             if n!=(len(BSCover)-1): 
@@ -205,7 +231,7 @@ def channelAllocate(BSCover,bsx,bsy):
     
             AvgBand = channelbandwidth##每个信道的平均带宽
 
-            """第一步：获得当前前基站下：每一个用户与所有信道连接条件下得到的用户速率"""
+            """第二步：获得当前前基站下：每一个用户与所有信道连接条件下得到的用户速率"""
             R = []#初始化一个速度矩阵，一行代表当前基站下一个用户与所有信道的链接所获得速率值列表，列代表信道
             for userindex in xrange(len(BSCover[n])):##userindex表示对应用户的下标值
                 d = distance(BSCover[n][userindex][0],BSCover[n][userindex][1],bsx[n],bsy[n])## 用户与当前基站的距离
@@ -213,39 +239,41 @@ def channelAllocate(BSCover,bsx,bsy):
                 for j in xrange(channelnum):
                     
                     Interf = interfere(n, j, BSchanAllocate, bsx, bsy)##n表示的是基站，j 是信道，chanlist是信道分配的列表
-#                     sinr = pt*(D[bs.index(user)])**(-4)/(Interf + P*radius**(-4)/alpha)##求sinr
+                    if j==2:print "Interf=%.2f"%Interf
                     sinr = pt*(d)**(-4)/(Interf + P*radius**(-4)/alpha)##求sinr
                     rate = AvgBand*log2(1+sinr)
+                    
                     r.append(rate)
                     ##将得到的速率值r，追加到当前 用户速度一维列表中,
-                    #每一个速率值对应一个信道:R =[r0,r1,r2,..]
-                    
-                R.append(r)
-            #print len(R)
+                    #每一个速率值对应一个信道:R[i] =[r0,r1,r2,..]
+                R.append(r)###最后得到的R速率矩阵，跟当前基站内用户数量直接相关，
             
-            """第二步：进行信道的分配，使用的贪心算法，用户选择(或者说基站分配)当前速率值最大的信道"""
+            """第三步：进行信道的分配，使用的贪心算法，用户选择(或者说基站分配)当前速率值最大的信道"""
             for userj in xrange(len(BSCover[n])):
 #                 j = userj##获取当前用户的下标(用户坐标不存在两个相同的)
                 print "基站编号: %d"%(n)
                 
                 Rnow=RateNow(BSchanAllocate, BSCover[n][userj], bsx, bsy)##表示用户当下的速率，已改正【【【应该从信道分配list中获取当前用户的当前速率，刚开始用户的求得速率值为0】】】 
+                
                 while(Rnow < Rmin):##用户速率大于最低速率，
+                    
                     if BSchanAllocate[n].count(-1)>0:#当前基站还有未分配的信道，还有一个else，如果当前基站的信道数量不够该如何处理
+                        print"maxR=%f" %max(R[userj])
                         Rnow += max(R[userj])
                         chanid = R[userj].index(max(R[userj]))##将当前用户速率值最大值对应的第一个(可能会出现速率并列最大的)信道标号赋值给chanid
+                        print "chanid=%d"%chanid
                         BSchanAllocate[n][chanid]=BSCover[n][userj]##在基站n的信道s对应位置写入用户坐标
                         print "channelid:%d occupied by user:%s"%(chanid,BSCover[n][userj])
                         
                         for rm in xrange(len(R)):##循环速率矩阵行，将本基站其他用户对应这条信道的速率设置为0
-    #                         row = R.index(rm)#获取行坐标
-                            for rn in xrange(len(R[userj])):
-    #                             col = rm.index(rn)##获取列坐标
-                                if (rn==chanid):R[rm][rn]=0##将已经分配的信道对应其他用户的速率矩阵位置设置为0，表示此信道已经分配不能再分配其他人
-                                  
-                    else: ###如果当前基站的信道已经分配完毕，暂时输出下面的字符串，后续会继续处理这种情况
+                            R[rm][chanid]=0##将已经分配的信道对应其他用户的速率矩阵位置设置为0，表示此信道已经分配不能再分配其他人 
+
+                    else: ###如果当前基站的信道已经分配完毕,将次用户坐标追加到（就是最后在给这个用户分配信道）临近的一个有空余信道的基站内
                         
                         print "All channels are busy"
                         exit(0)
+                print "Rnow=%.3f"%Rnow
+            print R            
             print "\n"
 #         n = n + 1 ##当前基站的分配完毕，n+1进入下一个基站的额信道分配
            
@@ -255,8 +283,8 @@ if __name__=="__main__":
    
     BSCover = classifyUser(r=100)
    
-    BSX = BSX+[0]
-    BSY = BSY+[0]
+    BSX = BSX+[0.0]
+    BSY = BSY+[0.0]
     ##将用户按照基站的覆盖范围分类之后，将宏基站的坐标加入到基站坐标列表中去
 #     s = 0
 #     for i in BSCover:
