@@ -363,13 +363,13 @@ class Individual:
         '''
     def CalculateInterfere(self, n, s):
         '''
-        计算干扰, 第n个基站的第s个信道收到的干扰
+        计算干扰, 第n个基站的第s个信道收到的干扰   
         干扰公式  信道功率*距离^（-4）  加法叠加
         '''
         Interfere = 0  #干扰初始设置为0
         for i in range(self.BSNum):   #对于每个基站
             if (i != n)and(self.genep[i][s] != 0):   #如果不是当前基站n，并且要计算的信道功率不为0（即已经分配）
-                k = self.genec[n][s]     #取要计算干扰信道链接的用户K
+                k = self.genec[n][s]     #取要计算干扰信道链接的用户K【如果此信道未分配的话，运行到k就会报错】
                 Distence = self.BS[i].DL[k]  #计算用户K与要计算干扰的基站的距离
                 Interfere = Interfere + self.genep[i][s]/self.Qmax*self.BS[i].power*(Distence**(-4))   #用公式计算干扰，加法叠加
         return(Interfere)

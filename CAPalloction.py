@@ -118,10 +118,12 @@ def interfere(n,s,chanlist,bsx,bsy):
     
     interf = 0.0
     if (len(chanlist)==len(bsx)):###必须保证信道分配矩阵 的行数与基站的数量相同，便于计算距离获取基站的坐标值
+        k = chanlist[n][s]
+        if k==-1:return interf  ###所求的信道没有分配不存在干扰，即interf=0
         for i in xrange(len(chanlist)):#循环基站数量次
             if(i!=n and chanlist[i][s]!=-1):##如果不是参数中的基站,且信道已经分配给用户(信道值为-1说明：此信道未分配，值为用户坐标说明此信道已经分配给该坐标用户)
-                k = chanlist[n][s] #定位连接基站n分配信道s的用户
-#                 print "k=%s"%k
+#                 k = chanlist[n][s] #定位连接基站n分配信道s的用户(可能出现这样的情况这个用户本身值是-1，假如它分配给用户求其他信道对它的干扰)
+#                 print "k=%d"%k
                 d = distance(k[0],k[1],bsx[i],bsy[i])
                 if i!=(len(chanlist)-1):#最后一个基站为宏基站，如果不是最后一个基站，功率p为微基站功率
                     p = microAveragePower
@@ -214,7 +216,9 @@ def channelAllocate(BSCover,bsx,bsy):
     if len(BSCover)!=len(bsx):
         print "channelAllocate Needs len(BSCover)==len(bsx,bsy)"
         exit(0)
-    BSchanAllocate = [[-1]*channelnum]*TotalNum  ####定义一个信道分配的矩阵，行代表一个基站，列代表基站的信道
+    #BSchanAllocate = [[-1]*channelnum]*TotalNum ##  
+    ####定义一个信道分配的矩阵，行代表一个基站，列代表基站的信道
+    BSchanAllocate=[[-1 for i in xrange(channelnum)] for j in xrange(TotalNum) ]
 
     for n in xrange(len(BSCover)):##n表示当前循环的基站下相应所有用户集合的编号，即基站编号
         '''第一步：初始化一些后续步骤所所需的量'''
@@ -239,7 +243,7 @@ def channelAllocate(BSCover,bsx,bsy):
                 for j in xrange(channelnum):
                     
                     Interf = interfere(n, j, BSchanAllocate, bsx, bsy)##n表示的是基站，j 是信道，chanlist是信道分配的列表
-                    if j==2:print "Interf=%.2f"%Interf
+                    
                     sinr = pt*(d)**(-4)/(Interf + P*radius**(-4)/alpha)##求sinr
                     rate = AvgBand*log2(1+sinr)
                     
@@ -250,7 +254,7 @@ def channelAllocate(BSCover,bsx,bsy):
             
             """第三步：进行信道的分配，使用的贪心算法，用户选择(或者说基站分配)当前速率值最大的信道"""
             for userj in xrange(len(BSCover[n])):
-#                 j = userj##获取当前用户的下标(用户坐标不存在两个相同的)
+
                 print "基站编号: %d"%(n)
                 
                 Rnow=RateNow(BSchanAllocate, BSCover[n][userj], bsx, bsy)##表示用户当下的速率，已改正【【【应该从信道分配list中获取当前用户的当前速率，刚开始用户的求得速率值为0】】】 
@@ -258,10 +262,10 @@ def channelAllocate(BSCover,bsx,bsy):
                 while(Rnow < Rmin):##用户速率大于最低速率，
                     
                     if BSchanAllocate[n].count(-1)>0:#当前基站还有未分配的信道，还有一个else，如果当前基站的信道数量不够该如何处理
-                        print"maxR=%f" %max(R[userj])
+                        
                         Rnow += max(R[userj])
                         chanid = R[userj].index(max(R[userj]))##将当前用户速率值最大值对应的第一个(可能会出现速率并列最大的)信道标号赋值给chanid
-                        print "chanid=%d"%chanid
+                        
                         BSchanAllocate[n][chanid]=BSCover[n][userj]##在基站n的信道s对应位置写入用户坐标
                         print "channelid:%d occupied by user:%s"%(chanid,BSCover[n][userj])
                         
@@ -272,11 +276,6 @@ def channelAllocate(BSCover,bsx,bsy):
                         
                         print "All channels are busy"
                         exit(0)
-                print "Rnow=%.3f"%Rnow
-            print R            
-            print "\n"
-#         n = n + 1 ##当前基站的分配完毕，n+1进入下一个基站的额信道分配
-           
     return BSchanAllocate    
 
 if __name__=="__main__":
