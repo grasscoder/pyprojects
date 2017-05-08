@@ -300,10 +300,18 @@ def channelAllocate(BSCover,bsx,bsy):
                         currentUser = userj##记录当前的基站范围的用户编号
                         userset = BSCover[currentBS][currentUser]##获取当前用户坐标
                         newDL = getDL(userset[0],userset[1],bsx,bsy)#####求当前用户与其他所有基站的距离列表
-                        
-                            
-                        print "All channels are busy"
-                        exit(0)
+                        temp = min(newDL)##获取当前用户与基站距离的最小值
+                        indexD = newDL.index(temp)##获取用户与基站最小距离的下标（如果小功率基站信道数量不够，距离最近的附近基站会向用户分配信道）
+                        while currentBS==indexD:##判断如果当前基站是否为用户原来所在的基站，增大他的值，继续寻找
+                            newDL[indexD] = 1500
+                            temp = min(newDL)
+                            indexD = newDL.index(temp)
+                        if BSchanAllocate[indexD].count(-1)>0:##新基站有空域信道
+                            BSCover[indexD].append(userset)
+                            channelAllocate(BSCover, bsx, bsy)###来个递归
+                        else:                    
+                            print "All channels are busy"
+                            exit(0)
     return BSchanAllocate    
 
 if __name__=="__main__":
