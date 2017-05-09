@@ -1,95 +1,96 @@
 # -*-coding:utf-8 -*-
 import random  
 import copy  
+import numpy as np  
+import matplotlib.pyplot as plt 
   
-birds=int(raw_input('Enter count of bird: '))  
-xcount=int(raw_input('Enter count of x: '))  
-pos=[]  
-speed=[]  
-bestpos=[]  
-birdsbestpos=[]  
-w=0.8  
-c1=2   
-c2=2  
-r1=0.6  
-r2=0.3  
-for i in range(birds):  
-    pos.append([])  
-    speed.append([])  
-    bestpos.append([])  
-  
-def GenerateRandVec(List):  
-    for i in range(xcount):  
-        List.append(random.randrange(1,100))  
-          
-def CalDis(List):  
-    dis=0.0  
-    for i in List:  
-        dis+=i**2  
-    return dis  
-  
-for i in range(birds):          #initial all birds' pos,speed  
-    GenerateRandVec(pos[i])  
-    GenerateRandVec(speed[i])  
-    bestpos[i]=copy.deepcopy(pos[i])  
-  
-def FindBirdsMostPos():  
-    best=CalDis(bestpos[0])  
-    index=0  
-    for i in range(birds):  
-        temp=CalDis(bestpos[i])  
-        if temp<best:  
-            best=temp  
-            index=i  
-    return bestpos[index]  
-  
-birdsbestpos=FindBirdsMostPos()   #initial birdsbestpos  
-  
-def NumMulVec(num,List):         #result is in list  
-    for i in range(len(List)):  
-        List[i]*=num  
-    return List  
-  
-def VecSubVec(list1,list2):   #result is in list1  
-    for i in range(len(list1)):  
-        list1[i]-=list2[i]  
-    return list1  
-  
-def VecAddVec(list1,list2):      #result is in list1  
-    for i in range(len(list1)):  
-        list1[i]+=list2[i]  
-    return list1  
-  
-def UpdateSpeed():  
-    #global speed  
-    for i in range(birds):  
-        temp1=NumMulVec(w,speed[i][:])  
-        temp2=VecSubVec(bestpos[i][:],pos[i])  
-        temp2=NumMulVec(c1*r1,temp2[:])  
-        temp1=VecAddVec(temp1[:],temp2)  
-        temp2=VecSubVec(birdsbestpos[:],pos[i])  
-        temp2=NumMulVec(c2*r2,temp2[:])  
-        speed[i]=VecAddVec(temp1,temp2)  
-          
-def UpdatePos():  
-    global bestpos,birdsbestpos  
-    for i in range(birds):  
-        VecAddVec(pos[i],speed[i])  
-        if CalDis(pos[i])<CalDis(bestpos[i]):  
-            bestpos[i]=copy.deepcopy(pos[i])  
-    birdsbestpos=FindBirdsMostPos()  
-      
-for i in range(100):  
-    #print birdsbestpos  
-    print CalDis(birdsbestpos)  
-    UpdateSpeed()  
-    UpdatePos()  
+
                   
-  
-# raw_input()  
+class Bird(object):##定义一个鸟类（粒子类）
+    
+    def __init__(self, speed, position, fit, lBestPosition, lBestFit):
+        '''
+                         初始化的信息：speed粒子的速率，position：粒子的位置，fit适应度，lBestPostion粒子经理的最佳位置，
+        lBestFit粒子的最佳是硬度值
+        '''
+        self.speed = speed
+        self.position = position
+        self.fit = fit
+        self.lBestFit = lBestFit
+        self.lBestPosition = lBestPosition
 
-
-
+ 
+#----------------------PSO参数设置---------------------------------  
+class PSO():  
+    def __init__(self,pN,dim,max_iter):  
+        self.w = 0.8    
+        self.c1 = 2     
+        self.c2 = 2     
+        self.r1= 0.6  
+        self.r2=0.3  
+        self.pN = pN                #粒子数量  
+        self.dim = dim              #搜索维度  
+        self.max_iter = max_iter    #迭代次数  
+        self.X = np.zeros((self.pN,self.dim))       #所有粒子的位置和速度  
+        self.V = np.zeros((self.pN,self.dim))  
+        self.pbest = np.zeros((self.pN,self.dim))   #个体经历的最佳位置和全局最佳位置  
+        self.gbest = np.zeros((1,self.dim))  
+        self.p_fit = np.zeros(self.pN)              #每个个体的历史最佳适应值  
+        self.fit = 1e10             #全局最佳适应值  
+          
+#---------------------目标函数Sphere函数-----------------------------  
+    def function(self,x):  
+        sum = 0  
+        length = len(x)  
+        x = x**2  
+        for i in range(length):  
+            sum += x[i]  
+        return sum 
+#---------------------初始化种群----------------------------------  
+    def init_Population(self):  
+        for i in range(self.pN):  
+            for j in range(self.dim):  
+                self.X[i][j] = random.uniform(0,1)  
+                self.V[i][j] = random.uniform(0,1)  
+            self.pbest[i] = self.X[i]  
+            tmp = self.function(self.X[i])  
+            self.p_fit[i] = tmp  
+            if(tmp < self.fit):  
+                self.fit = tmp  
+                self.gbest = self.X[i]  
+      
+#----------------------更新粒子位置----------------------------------  
+    def iterator(self):  
+        fitness = []  
+        for t in range(self.max_iter):  
+            for i in range(self.pN):         #更新gbest\pbest  
+                temp = self.function(self.X[i])  
+                if(temp<self.p_fit[i]):      #更新个体最优  
+                    self.p_fit[i] = temp  
+                    self.pbest[i] = self.X[i]  
+                    if(self.p_fit[i] < self.fit):  #更新全局最优  
+                        self.gbest = self.X[i]  
+                        self.fit = self.p_fit[i]  
+            for i in range(self.pN):  
+                self.V[i] = self.w*self.V[i] + self.c1*self.r1*(self.pbest[i] - self.X[i])+ self.c2*self.r2*(self.gbest - self.X[i])  
+                  
+                self.X[i] = self.X[i] + self.V[i]  
+            fitness.append(self.fit)  
+            print(self.fit)                   #输出最优值  
+        return fitness
+#----------------------程序执行-----------------------  
+my_pso = PSO(pN=30,dim=5,max_iter=100)  
+my_pso.init_Population()  
+fitness = my_pso.iterator()  
+#-------------------画图--------------------  
+plt.figure(1)  
+plt.title("Figure1")  
+plt.xlabel("iterators", size=14)  
+plt.ylabel("fitness", size=14)  
+t = np.array([t for t in range(0,100)])  
+fitness = np.array(fitness)  
+plt.plot(t,fitness, color='b',linewidth=3)  
+plt.show()
 
 
 
