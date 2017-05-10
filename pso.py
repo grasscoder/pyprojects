@@ -21,7 +21,8 @@ class Bird(object):##定义一个鸟类（粒子类）
 
  
 #----------------------PSO参数设置---------------------------------  
-class PSO():  
+class PSO(): 
+     
     def __init__(self,pN,dim,max_iter):  
         self.w = 0.8    
         self.c1 = 2     
