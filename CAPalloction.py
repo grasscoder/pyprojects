@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 from coverage import Draw
 from SINR import distance
 from numpy import log2
+from memory_profiler import profile as pro
+
 
 """
 一个cell中的包含一个宏基站、两个微基站，每个基站的信道数量都是64个，
@@ -229,6 +231,9 @@ def userAllocatedChanNum(chanlist,user):
             
     
 ##-----------------------------定 义 求 信 道 分 配 的 函 数 ----------------------------------------------
+
+@pro
+# @profile
 def channelAllocate(BSCover,bsx,bsy):
     """
    BSCover:用户分类的列表，bsx,bsy表示的是基站的坐标（）这个坐标必须包括宏基站坐标       
@@ -240,7 +245,7 @@ def channelAllocate(BSCover,bsx,bsy):
         exit(0)
     #BSchanAllocate = [[-1]*channelnum]*TotalNum ##  
     ####定义一个信道分配的矩阵，行代表一个基站，列代表基站的信道
-    BSchanAllocate=[[-1 for i in xrange(channelnum)] for j in xrange(TotalNum)]
+    BSchanAllocate=[[-1 for i in xrange(channelnum)] for j in xrange(len(BSCover))]
     connectChanNum = {}##用户连接信道的最大数量
 
     for n in xrange(len(BSCover)):##n表示当前循环的基站下相应所有用户集合的编号，即基站编号
@@ -279,7 +284,7 @@ def channelAllocate(BSCover,bsx,bsy):
             """第三步：进行信道的分配，使用的贪心算法，用户选择(或者说基站分配)当前速率值最大的信道"""
             for userj in xrange(len(BSCover[n])):
 
-                print "基站编号: %d"%(n)
+                ##print "基站编号: %d"%(n)
                 
                 Rnow=RateNow(BSchanAllocate, BSCover[n][userj], bsx, bsy)##表示用户当下的速率，已改正【【【应该从信道分配list中获取当前用户的当前速率，刚开始用户的求得速率值为0】】】 
                 i = 0 ##作为一个计数器使用记录当前用户分配的信道数量
@@ -292,7 +297,7 @@ def channelAllocate(BSCover,bsx,bsy):
                         
                         BSchanAllocate[n][chanid]=BSCover[n][userj]##在基站n的信道s对应位置写入用户坐标
                         i += 1 ##用户信道分配的计数器
-                        print "channelid:%d occupied by user:%s"%(chanid,BSCover[n][userj])
+                        ##print "channelid:%d occupied by user:%s"%(chanid,BSCover[n][userj])
                         
                         for rm in xrange(len(R)):##循环速率矩阵行，将本基站其他用户对应这条信道的速率设置为0
                             R[rm][chanid] = 0##将已经分配的信道对应其他用户的速率矩阵位置设置为0，表示此信道已经分配不能再分配其他人 
@@ -312,7 +317,7 @@ def channelAllocate(BSCover,bsx,bsy):
                                 indexD = newDL.index(temp)
                             if BSchanAllocate[indexD].count(-1)>0:##新基站有空余信道
                                 BSCover[indexD].append(userset)
-                                channelAllocate(BSCover, bsx, bsy)###递归信道分配
+                                channelAllocate(BSCover[indexD:], bsx[indexD:], bsy[indexD:])###递归信道分配,从追加用户的基站开始重新分配
                             else:                    
                                 print "All channels are busy"
                                 exit(0)
@@ -342,9 +347,9 @@ if __name__=="__main__":
         for j in xrange(len(BSchanAllocate[i])):
             if BSchanAllocate[i][j]!=-1:
                 An_k_s[i][j]=1
-    print "\n"
-    for i in xrange(len(An_k_s)):
-        print An_k_s[i]
+#     print "\n"
+#     for i in xrange(len(An_k_s)):
+#         print An_k_s[i]
          
     
     
