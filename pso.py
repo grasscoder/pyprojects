@@ -19,7 +19,6 @@ class Bird(object):##定义一个鸟类（粒子类）
         self.lBestFit = lBestFit
         self.lBestPosition = lBestPosition
 
- 
 #----------------------PSO参数设置---------------------------------  
 class PSO(): 
      
@@ -40,19 +39,20 @@ class PSO():
         self.fit = 1e10             #全局最佳适应值  
           
 #---------------------目标函数Sphere函数-----------------------------  
-    def function(self,x):  
+    def function(self,x):  #x是列表
         sum = 0  
         length = len(x)  
         x = x**2  
         for i in range(length):  
             sum += x[i]  
         return sum 
+    
 #---------------------初始化种群----------------------------------  
     def init_Population(self):  
         for i in range(self.pN):  
             for j in range(self.dim):  
-                self.X[i][j] = random.uniform(0,1)  
-                self.V[i][j] = random.uniform(0,1)  
+                self.X[i][j] = random.uniform(0,1)  #初始化种群的位置
+                self.V[i][j] = random.uniform(0,1)  #初始化种群的速度
             self.pbest[i] = self.X[i]  
             tmp = self.function(self.X[i])  
             self.p_fit[i] = tmp  
@@ -79,11 +79,13 @@ class PSO():
             fitness.append(self.fit)  
             print(self.fit)                   #输出最优值  
         return fitness
+    
 #----------------------程序执行-----------------------  
 my_pso = PSO(pN=30,dim=5,max_iter=100)  
 my_pso.init_Population()  
 fitness = my_pso.iterator()  
-#-------------------画图--------------------  
+
+#----------------------画 图--------------------------  
 plt.figure(1)  
 plt.title("Figure1")  
 plt.xlabel("iterators", size=14)  

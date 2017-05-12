@@ -233,7 +233,7 @@ def userAllocatedChanNum(chanlist,user):
 ##-----------------------------定 义 求 信 道 分 配 的 函 数 ----------------------------------------------
 
 @pro
-# @profile
+
 def channelAllocate(BSCover,bsx,bsy):
     """
    BSCover:用户分类的列表，bsx,bsy表示的是基站的坐标（）这个坐标必须包括宏基站坐标       
@@ -317,15 +317,47 @@ def channelAllocate(BSCover,bsx,bsy):
                                 indexD = newDL.index(temp)
                             if BSchanAllocate[indexD].count(-1)>0:##新基站有空余信道
                                 BSCover[indexD].append(userset)
-                                channelAllocate(BSCover[indexD:], bsx[indexD:], bsy[indexD:])###递归信道分配,从追加用户的基站开始重新分配
+                                channelAllocate(BSCover[:], bsx[:], bsy[:])###递归信道分配,从追加用户的基站开始重新分配
                             else:                    
                                 print "All channels are busy"
                                 exit(0)
                         except:
                             print "Error"        
     return BSchanAllocate    
+#------------------------------产 生 随 机 功 率 矩 阵 的 函 数 -----------------------------
+def getPower(chanlist):
+    '''
+            此函数的功能是根据基站信道的分配列表，得到信道的功率分配矩阵。值得注意的是:初始条件下信道的分配是基站的平均功率
+            按照在瓶平均功率条件下的信道分配方案，调整信道功率的大小，会得到一系列的初始化粒子，保证每个基站的信道功率和不能超过此基站的总功率
+             产生 num 个初始化粒子
+    '''
+    p = [[0 for i in xrange(len(chanlist[j]))] for j in xrange(len(chanlist))]#初始化一个全为0的功率分配矩阵
+    for i in xrange(len(chanlist)):##以基站个数做循环
+        if i!=len(chanlist)-1:#不是最后一个基站，功率为1.0W;最后一个基站是宏基站,功率为20.0W
+            ptotal = 1.0
+        else:
+            ptotal = 20.0
+        if chanlist[i].count(-1) < len(chanlist[i]):##如果基站存在信道分配
+            for j in xrange(len(chanlist[i])):
+                
+                    k = len(chanlist[i]) - chanlist[i].count(-1)##刺激站分配的信道数量
+                    ##为存在信道分配的位置随机分配一个随机功率值
+                    if chanlist[i][j]!=-1:
+#                         wp = uniform(0.001,ptotal/k)##每个信道功率最多分配ptotal/k，这样有点不合理
+                        wp = uniform(0.001,ptotal)
+                        if (sum(p[i])<ptotal):
+                            p[i][j] = wp
+                        elif(sum(p[i]==ptotal)):
+                            pass
+                        else:
+                            pass
+                            
+                    
+    return p   
 
 
+
+#------------------------------主 函 数 ---------------------------------------
 if __name__=="__main__":
    
     BSCover = classifyUser(r=100)
@@ -351,6 +383,8 @@ if __name__=="__main__":
 #     for i in xrange(len(An_k_s)):
 #         print An_k_s[i]
          
-    
-    
-    
+    ##既然信道分配已经确定了，那么平均功率所组成的一个粒子可以算作一个初始化粒子，然后针对这些已经分配信道的的用户的信道功率多做几次（20次）功率随机分配，就会产生许多不同的初始化
+    print "\n"
+    p = getPower(BSchanAllocate)
+    for i in p:
+        print i
