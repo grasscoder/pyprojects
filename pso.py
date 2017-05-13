@@ -39,14 +39,14 @@ class PSO():
         self.fit = 1e10             #全局最佳适应值  
           
 #---------------------目标函数Sphere函数-----------------------------  
-    def function(self,x):  #x是列表
-        sum = 0  
-        length = len(x)  
-        x = x**2  
-        for i in range(length):  
-            sum += x[i]  
-        return sum 
-    
+#     def function(self,x):  #x是列表
+#         sum = 0  
+#         length = len(x)  
+#         x = x**2  
+#         for i in range(length):  
+#             sum += x[i]  
+#         return sum 
+#     
 #---------------------初始化种群----------------------------------  
     def init_Population(self):  
         for i in range(self.pN):  

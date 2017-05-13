@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from coverage import Draw
 from SINR import distance
 from numpy import log2
-from memory_profiler import profile as pro
+from memory_profiler import profile
 
 
 """
@@ -44,6 +44,7 @@ maxUserConnectchanNum = 5 ##用户最大链接信道的数量
 
 macroAveragePower = macroPower/channelnum  ##宏基站的信道平均功率
 microAveragePower = picoPower/channelnum  ##微基站的信道平均功率
+print "宏基站信道平均功率：%s,picomeanPower:%s"%(macroAveragePower,microAveragePower)
 channelbandwidth = bandwidth/channelnum  ##每个信道的带宽
 
 #-----------------------------用 户 的 坐 标 位 置 和 基 站 的 坐 标 位 置 --------------------------------
@@ -232,7 +233,7 @@ def userAllocatedChanNum(chanlist,user):
     
 ##-----------------------------定 义 求 信 道 分 配 的 函 数 ----------------------------------------------
 
-@pro
+# @profile
 
 def channelAllocate(BSCover,bsx,bsy):
     """
@@ -337,22 +338,19 @@ def getPower(chanlist):
             ptotal = 1.0
         else:
             ptotal = 20.0
+            
         if chanlist[i].count(-1) < len(chanlist[i]):##如果基站存在信道分配
             for j in xrange(len(chanlist[i])):
-                
-                    k = len(chanlist[i]) - chanlist[i].count(-1)##刺激站分配的信道数量
+                k = len(chanlist[i]) - chanlist[i].count(-1)##此基站分配的信道数量
                     ##为存在信道分配的位置随机分配一个随机功率值
-                    if chanlist[i][j]!=-1:
-#                         wp = uniform(0.001,ptotal/k)##每个信道功率最多分配ptotal/k，这样有点不合理
-                        wp = uniform(0.001,ptotal)
-                        if (sum(p[i])<ptotal):
-                            p[i][j] = wp
-                        elif(sum(p[i]==ptotal)):
-                            pass
-                        else:
-                            pass
-                            
+                if chanlist[i][j]!=-1:
+                    wp = uniform(0.001, ptotal*1.0/k)
                     
+#                     while(sum(p[i]) + wp > ptotal):
+# #                   wp = uniform(0.001,ptotal/k)##每个信道功率最多分配ptotal/k，这样有点不合理
+#                         print sum(p[i])+wp 
+#                         wp = uniform(0.001,ptotal)
+                    p[i][j] = wp
     return p   
 
 
