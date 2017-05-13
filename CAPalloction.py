@@ -343,17 +343,13 @@ def getPower(chanlist):
             for j in xrange(len(chanlist[i])):
                 k = len(chanlist[i]) - chanlist[i].count(-1)##此基站分配的信道数量
                     ##为存在信道分配的位置随机分配一个随机功率值
-                if chanlist[i][j]!=-1:
-                    wp = uniform(0.001, ptotal*1.0/k)
-                    
-#                     while(sum(p[i]) + wp > ptotal):
-# #                   wp = uniform(0.001,ptotal/k)##每个信道功率最多分配ptotal/k，这样有点不合理
-#                         print sum(p[i])+wp 
-#                         wp = uniform(0.001,ptotal)
-                    p[i][j] = wp
+                if chanlist[i][j]!=-1: ##如果当前信道已分配
+                    s = sum(p[i])##求当前的基站的的功率和
+                    #print "ptotal = %s"%ptotal
+                    wp = uniform(0.001, (ptotal-s)*0.8) ##在0.001和剩余功率之间随机产生一个功率值
+                    p[i][j] = wp*(1.0/channelnum)##不至于随机数极差太大
+        
     return p   
-
-
 
 #------------------------------主 函 数 ---------------------------------------
 if __name__=="__main__":
