@@ -67,17 +67,23 @@ def sinr(BSid,Userchannellist,chan):###BSid基站类型：0:picoBS;1:MacroBS，�
 def readFile(*filename):
     '''函数的功能是从文件中读取用户信道和基站坐标的信息'''
     with open(filename[0],'r') as f:
-        bsx =[]
-        bsy =[]
+        userx =[]
+        usery =[]
         for line in f:
             L = line.rstrip("\n").split(" ")##去掉文件中每一行的换行符，并且按照空格分割成list
-            bsx.append(float(L[1]))
-            bsy.append(float(L[2]))
-        return bsx,bsy
+            userx.append(float(L[1]))
+            usery.append(float(L[2]))
+            
+    with open(filename[1],'r') as f1:
+        bsx = []
+        bsy = []
+        for line1 in f1:
+            L1 = line1.rstrip("\n").split(" ")
+            bsx.append(float(L1[1]))
+            bsy.append(float(L1[2]))
+    return userx,usery,bsx,bsy
             
 
-
- 
 #---------------------------------定 义 分 类 函 数----------------------------------------------
 def classifyUser(r,ux=UserX,uy=UserY,bsx=BSX,bsy=BSY):##定义一个分类函数
     '''
@@ -397,4 +403,5 @@ if __name__=="__main__":
 #     for i in p:
 #         print i
     filename = ['user.txt','BS.txt']
-    readFile(*filename)
+    UserX,UserY,BSX,BSY = readFile(*filename)
+    print len(UserX),len(BSX)
