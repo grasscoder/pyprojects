@@ -26,7 +26,7 @@ RelayNum = 2
 TotalNum =  MacroNum+PicoNum+FemtoNum+RelayNum##基站总数
 usernum = np.random.randint(50,51)
 # usernum = np.random.randint(65,66)
-print "usernum=%d"%usernum
+# print "usernum=%d"%usernum
 
 macroR = 500.0     ##宏基站的覆盖半径/m
 microR = 100.0     ##微基站的覆盖半径/m
@@ -62,19 +62,19 @@ def sinr(BSid,Userchannellist,chan):###BSid基站类型：0:picoBS;1:MacroBS，�
     """
     pass
  '''
-#-----------------------------定 义  一 个 写 入 文 件 的 函 数 ----------------------------------------
-def writeFile(filesource,method='w'):
-    '''函数的功能是想文件中写入基站和用户的坐标信息，filesource：写入文件的文件名（绝对路径），method：文本内容的写入方式"r,w,r+,w+"'''
-    
-    with open(filesource,method) as f:
-        
-        pass
  
 #-----------------------------定 义 一个 文 件 读 取 的 函 数 ------------------------------------------
-def readFile():
+def readFile(*filename):
     '''函数的功能是从文件中读取用户信道和基站坐标的信息'''
-    with open('user.txt','r') as f:
-        pass
+    with open(filename[0],'r') as f:
+        bsx =[]
+        bsy =[]
+        for line in f:
+            L = line.rstrip("\n").split(" ")##去掉文件中每一行的换行符，并且按照空格分割成list
+            bsx.append(float(L[1]))
+            bsy.append(float(L[2]))
+        return bsx,bsy
+            
 
 
  
@@ -368,31 +368,33 @@ def getPower(chanlist):
 #------------------------------主 函 数 ---------------------------------------
 if __name__=="__main__":
    
-    BSCover = classifyUser(r=100)
-   
-    BSX = BSX+[0.0]
-    BSY = BSY+[0.0]
-    ##将用户按照基站的覆盖范围分类之后，将宏基站的坐标加入到基站坐标列表中去
-#     s = 0
-#     for i in BSCover:
-#         print i
-#         s += len(i)
-#         print "len(i)=%d"%len(i)
-#     print "sum user:%d"%s
-
-    An_k_s=[[0 for i in xrange(channelnum)] for j in xrange(TotalNum)] 
-    BSchanAllocate = channelAllocate(BSCover,BSX,BSY)
-    for i in xrange(len(BSchanAllocate)):
-        print BSchanAllocate[i]
-        for j in xrange(len(BSchanAllocate[i])):
-            if BSchanAllocate[i][j]!=-1:
-                An_k_s[i][j]=1
+#     BSCover = classifyUser(r=100)
+#    
+#     BSX = BSX+[0.0]
+#     BSY = BSY+[0.0]
+#     ##将用户按照基站的覆盖范围分类之后，将宏基站的坐标加入到基站坐标列表中去
+# #     s = 0
+# #     for i in BSCover:
+# #         print i
+# #         s += len(i)
+# #         print "len(i)=%d"%len(i)
+# #     print "sum user:%d"%s
+# 
+#     An_k_s=[[0 for i in xrange(channelnum)] for j in xrange(TotalNum)] 
+#     BSchanAllocate = channelAllocate(BSCover,BSX,BSY)
+#     for i in xrange(len(BSchanAllocate)):
+#         print BSchanAllocate[i]
+#         for j in xrange(len(BSchanAllocate[i])):
+#             if BSchanAllocate[i][j]!=-1:
+#                 An_k_s[i][j]=1
+# #     print "\n"
+# #     for i in xrange(len(An_k_s)):
+# #         print An_k_s[i]
+#          
+#     ##既然信道分配已经确定了，那么平均功率所组成的一个粒子可以算作一个初始化粒子，然后针对这些已经分配信道的的用户的信道功率多做几次（20次）功率随机分配，就会产生许多不同的初始化
 #     print "\n"
-#     for i in xrange(len(An_k_s)):
-#         print An_k_s[i]
-         
-    ##既然信道分配已经确定了，那么平均功率所组成的一个粒子可以算作一个初始化粒子，然后针对这些已经分配信道的的用户的信道功率多做几次（20次）功率随机分配，就会产生许多不同的初始化
-    print "\n"
-    p = getPower(BSchanAllocate)
-    for i in p:
-        print i
+#     p = getPower(BSchanAllocate)
+#     for i in p:
+#         print i
+    filename = ['user.txt','BS.txt']
+    readFile(*filename)

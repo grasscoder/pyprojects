@@ -138,7 +138,7 @@ def RandomNum(num):
         y[i] = y[i] * leng
     return x,y #返回单位圆内的随机点的坐标 list
 
-def Draw(samples_num=60,R=500): #samples_num = 60  ### 样本数量,#R = 500 ##宏基站的大圆的半径
+def Draw(samples_num=50,R=500): #samples_num = 60  ### 样本数量,#R = 500 ##宏基站的大圆的半径
     """
     given sample number,draw these sample points.
     """
@@ -195,13 +195,18 @@ def Draw(samples_num=60,R=500): #samples_num = 60  ### 样本数量,#R = 500 ##�
     return R*x,R*y,xp,yp #返回用户的随机坐标，和基站的坐标（不包括宏基站）
 
 #-----------------------------定 义  一 个 写 入 文 件 的 函 数 ----------------------------------------
-def writeFile(filesource,method='w'):
+def writeFile(*filename):
     '''函数的功能是想文件中写入基站和用户的坐标信息，filesource：写入文件的文件名（绝对路径），method：文本内容的写入方式"r,w,r+,w+"'''
-    UserX,UserY,BSX,BSY = Draw()
-    with open(filesource,method) as f:
-        
-        pass
+    usernum = np.random.randint(50,60)
+    UserX,UserY,BSX,BSY = Draw(usernum)
+    with open(filename[0],'w') as f:
+        for i in xrange(len(UserX)):
+            f.write("%s %s %s"%(i,UserX[i],UserY[i])+"\n")#将用户坐标写入文件
+    with open(filename[1],'w') as f1:
+        for j in xrange(len(BSX)):
+            f1.write("%s %s %s"%(j,BSX[j],BSY[j])+"\n")#将基站坐标写入文件    
 
 if __name__=="__main__":
+    filename = ['user.txt','BS.txt']
     
-    Draw()
+    writeFile(*filename)
