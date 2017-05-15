@@ -2,7 +2,7 @@
 from random import random,uniform
 import numpy as np
 import matplotlib.pyplot as plt
-from coverage import Draw
+# from coverage import Draw ##用户和基站的坐标已改成从文件中直接读取，不需要使用的时候随机生成了2017年5月15日09:19:37改
 from SINR import distance
 from numpy import log2
 from memory_profiler import profile
@@ -44,11 +44,12 @@ maxUserConnectchanNum = 5 ##用户最大链接信道的数量
 
 macroAveragePower = macroPower/channelnum  ##宏基站的信道平均功率
 microAveragePower = picoPower/channelnum  ##微基站的信道平均功率
-print "宏基站信道平均功率：%s,picomeanPower:%s"%(macroAveragePower,microAveragePower)
+# print "宏基站信道平均功率：%s,picomeanPower:%s"%(macroAveragePower,microAveragePower)
 channelbandwidth = bandwidth/channelnum  ##每个信道的带宽
 
 #-----------------------------用 户 的 坐 标 位 置 和 基 站 的 坐 标 位 置 --------------------------------
-UserX,UserY, BSX,BSY = Draw(samples_num= usernum,R = 500)#接收用户坐标和基站坐标(不包括宏基站)
+'''这些信息已经改成从文件中获取，不需要每次运行的时候重新生成了'''
+# UserX,UserY, BSX,BSY = Draw(samples_num= usernum,R = 500)#接收用户坐标和基站坐标(不包括宏基站)2017年5月15日09:20:02改
 
 ''' 
 # ------------------------------------此 函 数 已 经 废 弃----------------------------------------   
@@ -81,11 +82,11 @@ def readFile(*filename):
             L1 = line1.rstrip("\n").split(" ")
             bsx.append(float(L1[1]))
             bsy.append(float(L1[2]))
-    return userx,usery,bsx,bsy
+    return userx,usery,bsx,bsy##基站坐标中不含有宏基站坐标
             
 
 #---------------------------------定 义 分 类 函 数----------------------------------------------
-def classifyUser(r,ux=UserX,uy=UserY,bsx=BSX,bsy=BSY):##定义一个分类函数
+def classifyUser(r,ux,uy,bsx,bsy):##定义一个分类函数
     '''
         将用户按照：是否处于某个基站覆盖范围分类,r基站的半径
         基站坐标不能包含宏基站坐标，宏基站用户需等待所有其他类型的基站分类完毕之后才能得到
@@ -344,7 +345,8 @@ def channelAllocate(BSCover,bsx,bsy):
                                 print "All channels are busy"
                                 exit(0)
                         except:
-                            print "Error"        
+                            print "Error" 
+                            exit(0)       
     return BSchanAllocate    
 #------------------------------产 生 随 机 功 率 矩 阵 的 函 数 -----------------------------
 def getPower(chanlist):
@@ -373,11 +375,13 @@ def getPower(chanlist):
 
 #------------------------------主 函 数 ---------------------------------------
 if __name__=="__main__":
-   
-#     BSCover = classifyUser(r=100)
-#    
-#     BSX = BSX+[0.0]
-#     BSY = BSY+[0.0]
+    
+    filename = ['user.txt','bs.txt']
+    UserX,UserY,BSX,BSY = readFile(*filename)
+    BSCover = classifyUser(100,UserX,UserY,BSX,BSY)
+    ####将宏基站的坐标加入到基站的坐标列表中
+    BSX = BSX+[0.0]
+    BSY = BSY+[0.0]
 #     ##将用户按照基站的覆盖范围分类之后，将宏基站的坐标加入到基站坐标列表中去
 # #     s = 0
 # #     for i in BSCover:
@@ -386,22 +390,19 @@ if __name__=="__main__":
 # #         print "len(i)=%d"%len(i)
 # #     print "sum user:%d"%s
 # 
-#     An_k_s=[[0 for i in xrange(channelnum)] for j in xrange(TotalNum)] 
-#     BSchanAllocate = channelAllocate(BSCover,BSX,BSY)
-#     for i in xrange(len(BSchanAllocate)):
-#         print BSchanAllocate[i]
-#         for j in xrange(len(BSchanAllocate[i])):
-#             if BSchanAllocate[i][j]!=-1:
-#                 An_k_s[i][j]=1
-# #     print "\n"
-# #     for i in xrange(len(An_k_s)):
-# #         print An_k_s[i]
-#          
-#     ##既然信道分配已经确定了，那么平均功率所组成的一个粒子可以算作一个初始化粒子，然后针对这些已经分配信道的的用户的信道功率多做几次（20次）功率随机分配，就会产生许多不同的初始化
+    An_k_s=[[0 for i in xrange(channelnum)] for j in xrange(TotalNum)] 
+    BSchanAllocate = channelAllocate(BSCover,BSX,BSY)
+    for i in xrange(len(BSchanAllocate)):
+        print BSchanAllocate[i]
+        for j in xrange(len(BSchanAllocate[i])):
+            if BSchanAllocate[i][j]!=-1:
+                An_k_s[i][j]=1
 #     print "\n"
-#     p = getPower(BSchanAllocate)
-#     for i in p:
-#         print i
-    filename = ['user.txt','BS.txt']
-    UserX,UserY,BSX,BSY = readFile(*filename)
-    print len(UserX),len(BSX)
+#     for i in xrange(len(An_k_s)):
+#         print An_k_s[i]
+          
+    ##既然信道分配已经确定了，那么平均功率所组成的一个粒子可以算作一个初始化粒子，然后针对这些已经分配信道的的用户的信道功率多做几次（20次）功率随机分配，就会产生许多不同的初始化
+    print "\n"
+    p = getPower(BSchanAllocate)
+    for i in p:                                                           
+        print i
