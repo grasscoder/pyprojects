@@ -40,13 +40,16 @@ class PSO():
           
 #---------------------目标函数Sphere函数-----------------------------  
     def function(self,x):  #x是列表
-#         sum = 0  
-#         length = len(x)  
-#         x = x**2  
-#         for i in range(length):  
-#             sum += x[i]  
-#         return sum 
-        pass
+        '''
+        首要解决的问题是 目标函数的的表达式
+        '''
+        sum = 0  
+        length = len(x)  
+        x = x**2  
+        for i in range(length):  
+            sum += x[i]  
+        return sum 
+#         pass
 #---------------------初始化种群----------------------------------  
     def init_Population(self):  
         for i in range(self.pN):  
@@ -80,8 +83,9 @@ class PSO():
             print(self.fit)                   #输出最优值  
         return fitness
     
-#----------------------程序执行-----------------------  
-my_pso = PSO(pN=30,dim=5,max_iter=100)  
+#----------------------程序执行-----------------------
+max_iter = 200  
+my_pso = PSO(pN=30,dim=5,max_iter=max_iter)  
 my_pso.init_Population()  
 fitness = my_pso.iterator()  
 
@@ -90,7 +94,7 @@ plt.figure(1)
 plt.title("Figure1")  
 plt.xlabel("iterators", size=14)  
 plt.ylabel("fitness", size=14)  
-t = np.array([t for t in range(0,100)])  
+t = np.array([t for t in range(0,max_iter)]) ##200 为max_iter 
 fitness = np.array(fitness)  
 plt.plot(t,fitness, color='b',linewidth=3)  
 plt.show()
