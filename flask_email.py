@@ -1,6 +1,6 @@
 # -*-coding:utf-8 -*-
 '''
-Created on 2017��4��20��
+Created on 2017年4月20日
 
 @author: Administrator
 '''
@@ -25,7 +25,7 @@ mail = Mail(app)
 @app.route('/')
 def index():
 # sender 发送方，recipients邮件接收方列表
-    msg = Message("发一张 图片给你看看我的头像，在附件中",sender='xiangcai@163.com', recipients=['976825033@qq.com'])
+    msg = Message("发一张 图片给你看看我的头像，在附件中",sender='hu600hu@163.com', recipients=['976825033@qq.com'])
 # msg.body 邮件正文
     msg.body = "给你发一封测试邮件，用代码写的"
 # msg.attach 邮件附件添加

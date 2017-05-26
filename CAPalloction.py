@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from SINR import distance
 from numpy import log2
 from memory_profiler import profile
+# from pso import PSO 
 
 
 """
@@ -257,7 +258,7 @@ def userAllocatedChanNum(chanlist,user):
 
 # @profile
 
-def channelAllocate(BSCover,bsx,bsy):
+def channelAllocate(BSCover,BSchanAllocate,bsx,bsy):
     """
    BSCover:用户分类的列表，bsx,bsy表示的是基站的坐标（）这个坐标必须包括宏基站坐标       
           对基站 范围内的用户进行信道分配，每一分配一个基站内的用户，初始化一个信道分配的列表，如果对应基站的信道分配给用户，则在这个基站对应的新到位置写入用户的坐标
@@ -268,7 +269,7 @@ def channelAllocate(BSCover,bsx,bsy):
         exit(0)
     #BSchanAllocate = [[-1]*channelnum]*TotalNum ##  
     ####定义一个信道分配的矩阵，行代表一个基站，列代表基站的信道
-    BSchanAllocate=[[-1 for i in xrange(channelnum)] for j in xrange(len(BSCover))]
+    
     connectChanNum = {}##用户连接信道的最大数量
 
     for n in xrange(len(BSCover)):##n表示当前循环的基站下相应所有用户集合的编号，即基站编号
@@ -354,91 +355,33 @@ def getPower(chanlist):
             此函数的功能是根据基站信道的分配列表，得到信道的功率分配矩阵。值得注意的是:初始条件下信道的分配是基站的平均功率
             按照在瓶平均功率条件下的信道分配方案，调整信道功率的大小，会得到一系列的初始化粒子，保证每个基站的信道功率和不能超过此基站的总功率
              产生 num 个初始化粒子
+            改：根据信道分配得到对应信道的的功率分配 【比例】，由于不同基站的基站功率不同为了方便，使用功率比例(等级)2017年5月26日15:58
     '''
-    p = [[0 for i in xrange(len(chanlist[j]))] for j in xrange(len(chanlist))]#初始化一个全为0的功率分配矩阵
+    p = [[0 for i in xrange(len(chanlist[j]))] for j in xrange(len(chanlist))]#初始化一个功率比例值全为0的功率分配矩阵
     for i in xrange(len(chanlist)):##以基站个数做循环
-        if i!=len(chanlist)-1:#不是最后一个基站，功率为1.0W;最后一个基站是宏基站,功率为20.0W
-            ptotal = 1.0
-        else:
-            ptotal = 20.0
             
         if chanlist[i].count(-1) < len(chanlist[i]):##如果基站存在信道分配
+            k = len(chanlist[i]) - chanlist[i].count(-1)##此基站分配的信道数量
+            randp = []
+            for n in xrange(k):
+                t = uniform(0.001,1-sum(randp))##保证所有的已分配信道该比例之和小于1，缺点就是第一个产生的比例值总是最大的
+                randp.append(t)
+            n = 0;
             for j in xrange(len(chanlist[i])):
-                k = len(chanlist[i]) - chanlist[i].count(-1)##此基站分配的信道数量
-                    ##为存在信道分配的位置随机分配一个随机功率值
-                if chanlist[i][j]!=-1: ##如果当前信道已分配
-                    s = sum(p[i])##求当前的基站的的功率和
-                    #print "ptotal = %s"%ptotal
-                    wp = uniform(0.001, (ptotal-s)*0.8) ##在0.001和剩余功率之间随机产生一个功率值
-                    p[i][j] = wp*(1.0/channelnum)##不至于随机数极差太大
-    return p 
-
-#----------------------PSO参数设置---------------------------------  
-class PSO(): 
-     
-    def __init__(self,pN,dim,max_iter): 
-        '''粒子群初始化信息''' 
-        self.w = 0.8    
-        self.c1 = 2     
-        self.c2 = 2     
-        self.r1= 0.6  
-        self.r2=0.3  
-        self.pN = pN                #粒子数量  
-        self.dim = dim              #搜索维度  
-        self.max_iter = max_iter    #迭代次数  
-        self.X = np.zeros((self.pN,self.dim))       #所有粒子的位置和速度  
-        self.V = np.zeros((self.pN,self.dim))  
-        self.pbest = np.zeros((self.pN,self.dim))   #个体经历的最佳位置和全局最佳位置  
-        self.gbest = np.zeros((1,self.dim))  
-        self.p_fit = np.zeros(self.pN)              #每个个体的历史最佳适应值  
-        self.fit = 1e10             #全局最佳适应值  
-          
-#---------------------目标函数Sphere函数-----------------------------  
-    def function(self,x):  #x是列表
-        '''
-        首要解决的问题是 目标函数的的表达式
-        '''
-#         sum = 0  
-#         length = len(x)  
-#         x = x**2  
-#         for i in range(length):  
-#             sum += x[i]  
-#         return sum 
-        pass
-#---------------------初始化种群----------------------------------  
-    def init_Population(self):  
-        for i in range(self.pN):  
-            for j in range(self.dim):  
-                self.X[i][j] = random.uniform(0,1)  #初始化种群的位置
-                self.V[i][j] = random.uniform(0,1)  #初始化种群的速度
-            self.pbest[i] = self.X[i]  
-            tmp = self.function(self.X[i])  
-            self.p_fit[i] = tmp  
-            if(tmp < self.fit):  
-                self.fit = tmp  
-                self.gbest = self.X[i]  
-      
-#----------------------更新粒子位置----------------------------------  
-    def iterator(self):  
-        fitness = []  
-        for t in range(self.max_iter):  
-            for i in range(self.pN):         #更新gbest\pbest  
-                temp = self.function(self.X[i])  
-                if(temp<self.p_fit[i]):      #更新个体最优  
-                    self.p_fit[i] = temp  
-                    self.pbest[i] = self.X[i]  
-                    if(self.p_fit[i] < self.fit):  #更新全局最优  
-                        self.gbest = self.X[i]  
-                        self.fit = self.p_fit[i]  
-            for i in range(self.pN):  
-                self.V[i] = self.w*self.V[i] + self.c1*self.r1*(self.pbest[i] - self.X[i])+ self.c2*self.r2*(self.gbest - self.X[i])  
-                  
-                self.X[i] = self.X[i] + self.V[i]  
-            fitness.append(self.fit)  
-            print(self.fit)                   #输出最优值  
-        return fitness
+                if chanlist[i][j]!=-1:
+                    p[i][j] = randp[n]
+                    n = n + 1
+    return p
+def turnInToParticle (p):
+    '''
+            将功率矩阵转换为粒子，p为粒子功率等级分配的矩阵
+    '''
+    temp = []
+    for i in p:
+        temp = temp + i
+    return temp
+        
     
-
 #------------------------------主 函 数 ---------------------------------------
 if __name__=="__main__":
     
@@ -450,7 +393,11 @@ if __name__=="__main__":
     BSY = BSY+[0.0]
     #---------------------------得到An_k_s----------------------------
     An_k_s=[[0 for i in xrange(channelnum)] for j in xrange(TotalNum)] 
-    BSchanAllocate = channelAllocate(BSCover,BSX,BSY)
+    BSchanAllocate=[[-1 for i in xrange(channelnum)] for j in xrange(len(BSCover))]#初始化信道分配
+    for i in xrange(5):
+        BSchanAllocate = channelAllocate(BSCover,BSchanAllocate,BSX,BSY)
+    
+    
     for i in xrange(len(BSchanAllocate)):
         print BSchanAllocate[i]
         for j in xrange(len(BSchanAllocate[i])):
@@ -458,27 +405,14 @@ if __name__=="__main__":
                 An_k_s[i][j]=1
 
     ##既然信道分配已经确定了，那么平均功率所组成的一个粒子可以算作一个初始化粒子，然后针对这些已经分配信道的的用户的信道功率多做几次（20次）功率随机分配，就会产生许多不同的初始化
-    print "\n"
-    temp = [] 
+   
+#     P = []
+#     for i in xrange(15):
+#         p = turnInToParticle(getPower(BSchanAllocate))
+#         P.append(p)
+#     for j in P:
+#         print j
     p = getPower(BSchanAllocate)
-    for i in p:                                                           
-        temp= i + temp
-    print "len(temp)="+str(len(temp))
-    
-    #----------------------粒子群程序执行-----------------------  
-    my_pso = PSO(pN=30,dim=5,max_iter=100)  
-    my_pso.init_Population()  
-    fitness = my_pso.iterator()  
-    
-    #----------------------画 图--------------------------  
-    plt.figure(1)  
-    plt.title("Figure1")  
-    plt.xlabel("iterators", size=14)  
-    plt.ylabel("fitness", size=14)  
-    t = np.array([t for t in range(0,100)])  
-    fitness = np.array(fitness)  
-    plt.plot(t,fitness, color='b',linewidth=3)  
-    plt.show()
+    for i in p:
+        print i
 
-    
-    
