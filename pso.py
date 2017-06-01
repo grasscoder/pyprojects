@@ -58,26 +58,34 @@ class PSO():
         UserX,UserY,BSX,BSY = readFile(*filename)
         BSCover = classifyUser(100,UserX,UserY,BSX,BSY)
         BSchanAllocate=[[-1 for i in xrange(self.channelnum)] for j in xrange(len(BSCover))]#初始化信道分配
-        for i in xrange(5):
-            BSchanAllocate = channelAllocate(BSCover,BSchanAllocate,BSX,BSY)
         ####将宏基站的坐标加入到基站的坐标列表中
         BSX = BSX+[0.0]
         BSY = BSY+[0.0]
+        for i in xrange(5):
+            BSchanAllocate = channelAllocate(BSCover,BSchanAllocate,BSX,BSY)
+        
         for i in xrange(self.pN):
-            self.x[i] = turnInToParticle(getPower(BSchanAllocate))#初始化粒子
-             
-            
-        for i in range(self.pN):  
-            for j in range(self.dim):  
-                self.X[i][j] = random.uniform(0,1)  #初始化种群的位置
-                self.V[i][j] = random.uniform(0,1)  #初始化种群的速度
+            self.X[i] = turnInToParticle(getPower(BSchanAllocate))#初始化粒子位置
+            for j in range(self.dim):
+                self.V[i][j] = random.uniform(0,1) 
             self.pbest[i] = self.X[i]  
-            tmp = self.function(self.X[i])  
+            tmp = self.function(self.X[i])#目标函数
             self.p_fit[i] = tmp  
             if(tmp < self.fit):  
                 self.fit = tmp  
-                self.gbest = self.X[i]  
+                self.gbest = self.X[i]
                 
+#         for i in range(self.pN):  
+#             for j in range(self.dim):  
+#                 self.X[i][j] = random.uniform(0,1)  #初始化种群的位置
+#                 self.V[i][j] = random.uniform(0,1)  #初始化种群的速度
+#             self.pbest[i] = self.X[i]  
+#             tmp = self.function(self.X[i])  
+#             self.p_fit[i] = tmp  
+#             if(tmp < self.fit):  
+#                 self.fit = tmp  
+#                 self.gbest = self.X[i]  
+#                 
         
       
 #----------------------更新粒子位置----------------------------------  

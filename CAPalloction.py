@@ -364,7 +364,7 @@ def getPower(chanlist):
             k = len(chanlist[i]) - chanlist[i].count(-1)##此基站分配的信道数量
             randp = []
             for n in xrange(k):
-                t = uniform(0.001,1-sum(randp))##保证所有的已分配信道该比例之和小于1，缺点就是第一个产生的比例值总是最大的
+                t = 15/64.0*uniform(0.001,1-sum(randp))##保证所有的已分配信道该比例之和小于1，缺点就是第一个产生的比例值总是最大的
                 randp.append(t)
             n = 0;
             for j in xrange(len(chanlist[i])):
@@ -413,6 +413,8 @@ if __name__=="__main__":
 #     for j in P:
 #         print j
     p = getPower(BSchanAllocate)
-    for i in p:
-        print i
+    for i in xrange(len(p)):
+        print p[i]
+        if i==len(p)-1:
+            print sum(p[i])
 
