@@ -381,7 +381,13 @@ def turnInToParticle (p):
         temp = temp + i
     return temp
         
-    
+def ParticleInToMatrix(p):#函数的作用是:将一个粒子群的粒子转换为原来的二维数组(矩阵)
+    '''p表示一个功率等级的粒子'''
+    PRankmatrix = []#功率等级矩阵
+    for i in xrange(len(p)/64):
+        PRankmatrix.append([64*i:])
+        
+    pass    
 #------------------------------主 函 数 ---------------------------------------
 if __name__=="__main__":
     
