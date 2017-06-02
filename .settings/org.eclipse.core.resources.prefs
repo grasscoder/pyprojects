@@ -3,6 +3,7 @@ encoding/CAPalloction.py=utf-8
 encoding/Drawpic.py=gbk
 encoding/SINR.py=utf-8
 encoding/brest.py=utf-8
+encoding/chanAllocate.py=utf-8
 encoding/coverage.py=utf-8
 encoding/flask_email.py=utf-8
 encoding/pract.py=utf-8
