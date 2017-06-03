@@ -385,9 +385,9 @@ def ParticleInToMatrix(p):#函数的作用是:将一个粒子群的粒子转换�
     '''p表示一个功率等级的粒子'''
     PRankmatrix = []#功率等级矩阵
     for i in xrange(len(p)/64):
-        PRankmatrix.append([64*i:])
-        
-    pass    
+        PRankmatrix.append(p[64*i:63+64*i])
+    return PRankmatrix 
+       
 #------------------------------主 函 数 ---------------------------------------
 if __name__=="__main__":
     
