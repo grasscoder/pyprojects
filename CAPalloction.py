@@ -387,6 +387,24 @@ def ParticleInToMatrix(p):#函数的作用是:将一个粒子群的粒子转换�
     for i in xrange(len(p)/64):
         PRankmatrix.append(p[64*i:63+64*i])
     return PRankmatrix 
+
+def chanNumOfEachUser(chanAllocate):
+    '''函数的功能是根据信道的分配列表统计每个用户使用信道的数量，返回一个字典'''
+    chanUserDict = {}
+    for i in xrange(len(chanAllocate)):
+        if chanAllocate[i].count(-1)<64:
+            for j in set(chanAllocate[i]):
+                if j!=-1:#信道位置已分配给用户
+                    if chanUserDict.has_key(j):#如果字典中存在这个键值，键的值累加，否则的话，添加新的键值对
+                        chanUserDict[j] += chanAllocate[i].count(j)# 
+                    else:
+                        chanUserDict[j] = chanAllocate[i].count(j)
+    return chanUserDict
+
+def judgeTwoListEqual(ndarray1,ndarray2):
+    '''判断两个array是否相等'''
+    return (ndarray1 ==ndarray2).all()#判断两个矩阵相等
+     
        
 #------------------------------主 函 数 ---------------------------------------
 if __name__=="__main__":

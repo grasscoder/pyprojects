@@ -3,7 +3,7 @@ import random
 import copy  
 import numpy as np  
 import matplotlib.pyplot as plt
-from CAPalloction import readFile,classifyUser,getPower,channelAllocate,turnInToParticle
+from CAPalloction import readFile,classifyUser,getPower,channelAllocate,turnInToParticle,chanNumOfEachUser
 
 #----------------------PSO参数设置---------------------------------  
 class PSO(): 
@@ -28,17 +28,17 @@ class PSO():
         self.BSCover = classifyUser(100,self.UserX,self.UserY,self.BSX,self.BSY)
         self.BSchanAllocate=[[-1 for i in xrange(self.channelnum)] for j in xrange(len(self.BSCover))]#初始化信道分配 
 #---------------------目标函数Sphere函数-----------------------------  
-    def function(self,x):  #x是列表
+    def function(self,p):  #p不是列表，是numpy.ndarray,列表是不能进行数值运算的
         '''
-        首要解决的问题是 目标函数的的表达式
-        由于粒子由是不同信道的功率等级（比例）表示的，分配信道的
+        首要解决的问题是 目标函数的的表达式:
+        由于粒子由是不同信道的功率等级（比例）表示的,p = array([p1,p2,....,p704]),
         '''
-        sum = 0  
-        length = len(x)  
-        x = x**2  
+        thissum = 0  
+        length = len(p)  
+        p = p**2  
         for i in range(length):  
-            sum += x[i]  
-        return sum 
+            thissum += p[i]  
+        return thissum 
 
 #---------------------初始化种群----------------------------------  
     def init_Population(self): 
@@ -58,6 +58,7 @@ class PSO():
             if(tmp < self.fit):  #判断小于全局最佳适应值，将当前粒子的最佳适应值赋值给全局最佳适应值
                 self.fit = tmp   #
                 self.gbest = self.X[i]
+                
 #--------------------------粒子的惯性权重-----------------------------
     def inertia_Weight(self,t):
         """保证惯性权重开始:0.9全局搜索能力强，最后为0.1:局部搜索能力强"""
@@ -65,8 +66,7 @@ class PSO():
         b = (0.9*self.max_iter-0.1)/(self.max_iter-1)
         y = k*t + b
         return y
-    
-         
+
 #----------------------更新粒子位置----------------------------------  
     def iterator(self):  
         fitness = []  
@@ -87,7 +87,9 @@ class PSO():
             fitness.append(self.fit)  
             print(self.fit)                   #输出最优值  
         return fitness
+    
 #----------------------------------粒子群类构造结束-------------------------------------------------
+
 if __name__=="__main__":    
     #----------------------程序执行-----------------------
     max_iter = 200  
