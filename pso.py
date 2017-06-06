@@ -58,6 +58,32 @@ class PSO():
             if(tmp < self.fit):  #判断小于全局最佳适应值，将当前粒子的最佳适应值赋值给全局最佳适应值
                 self.fit = tmp   #
                 self.gbest = self.X[i]
+
+#---------------------初始化种群----------------------------------
+    '''第二种初始化的方案:只有分配的信道才分配功率等级，从代码中控制V[i][j]的初始化，只有对应分配的信道才有速率值，否则没有'''  
+    def init_Population2(self): 
+        ####将宏基站的坐标加入到基站的坐标列表中
+        self.BSX = self.BSX+[0.0]
+        self.BSY = self.BSY+[0.0]
+        for i in xrange(5):
+            self.BSchanAllocate = channelAllocate(self.BSCover,self.BSchanAllocate,self.BSX,self.BSY)
+        
+        for i in xrange(self.pN):
+            self.X[i] = turnInToParticle(getPower(self.BSchanAllocate))#初始化粒子位置
+            for j in xrange(self.dim):##以粒子的维度为循环次数
+                if self.X[i][j]!=0:##在x[i]不为0的位置，随机初始化一个速度值
+                    self.V[i][j] = random.uniform(0,1) #初始化粒子的速度
+            self.pbest[i] = self.X[i] ##每个粒子的最佳位置 
+            tmp = self.function(self.X[i])#调用目标函数，计算当前粒子的适应值，目标函数是处理每一个粒子的，在这个表达式中显而易见
+            self.p_fit[i] = tmp  ##每个粒子最佳适应值
+            if(tmp < self.fit):  #判断小于全局最佳适应值，将当前粒子的最佳适应值赋值给全局最佳适应值
+                self.fit = tmp   #
+                self.gbest = self.X[i]
+        flag = True
+        if flag:
+            print self.X[0][:20]
+            print self.V[0][:20]
+            flag = False         
                 
 #--------------------------粒子的惯性权重-----------------------------
     def inertia_Weight(self,t):
@@ -85,18 +111,21 @@ class PSO():
                   
                 self.X[i] = self.X[i] + self.V[i]  
             fitness.append(self.fit)  
-            print(self.fit)                   #输出最优值  
+#             print(self.fit)                   #输出最优值  
         return fitness
     
 #----------------------------------粒子群类构造结束-------------------------------------------------
+    def printXV(self):
+        print self.X[0][:20]
+        print self.V[0][:20]
 
 if __name__=="__main__":    
     #----------------------程序执行-----------------------
     max_iter = 200  
     my_pso = PSO(pN=15,dim=704,max_iter=max_iter)  
-    my_pso.init_Population()  
+    my_pso.init_Population2()  
     fitness = my_pso.iterator()  
-    
+    my_pso.printXV()
     #----------------------画 图--------------------------  
     plt.figure(1)  
     plt.title("Figure1")  
