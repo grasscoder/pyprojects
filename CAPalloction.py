@@ -170,7 +170,6 @@ def interfere1(n, s, user, chanlist, bsx, bsy):
     
         return interf
 
-
 """
     BSCover 一行代表一个基站 下的所有用户
 """
@@ -218,6 +217,12 @@ def RateNow(chanlist,user,bsx,bsy):
         print "len(bsx)=%d,len(chanlist)=%d"%(len(bsx),len(chanlist))
         exit(0)
     return rate
+
+#---------------------------------定 义 求 信 噪 比 函 数 -----------------------------------------------
+def SINR(n, s, k, BSCover, BSchanAllocate):#这个函数转移到pso文件中实现
+    """注意此时的功率不是信道分配时的平均功率，而是按照功率等级划分的功率,所以需要传入的参数还有功率等级。"""
+    """定义一个求信噪比的函数:基站n将信道s分配给用户k"""
+    
     
 #------------------------定 义 求 用 户 信 道 速 率 的 函 数 -----------------------------------------
 def userChanRate(userlist,chanlist,bsxi,bsyi):
@@ -270,8 +275,9 @@ def channelAllocate(BSCover,BSchanAllocate,bsx,bsy):
     #BSchanAllocate = [[-1]*channelnum]*TotalNum ##  
     ####定义一个信道分配的矩阵，行代表一个基站，列代表基站的信道
     
-    connectChanNum = {}##用户连接信道的最大数量
-
+    #connectChanNum = {}##用户连接信道的最大数量
+#     BSchanAllocate=[[-1 for i in xrange(channelnum)] for j in xrange(len(BSCover))]#初始化信道分配,2017年6月23日11:00不知道当时为什么没有把初始化 信道分配写在这里,在这之前是有的
+    
     for n in xrange(len(BSCover)):##n表示当前循环的基站下相应所有用户集合的编号，即基站编号
         '''第一步：初始化一些后续步骤所所需的量'''
         if len(BSCover[n]) > 0 : ##当前编号对应的基站中如果有用户的话，继续执行
@@ -292,7 +298,7 @@ def channelAllocate(BSCover,BSchanAllocate,bsx,bsy):
             for userindex in xrange(len(BSCover[n])):##userindex表示对应用户的下标值
                 d = distance(BSCover[n][userindex][0],BSCover[n][userindex][1],bsx[n],bsy[n])## 用户与当前基站的距离
                 r = []
-                for j in xrange(channelnum):
+                for j in xrange(channelnum):#channelnum信道数量，即64
                     
                     Interf = interfere1(n, j, BSCover[n][userindex], BSchanAllocate, bsx, bsy)##n表示的是基站，j 是信道，chanlist是信道分配的列表
 #                     print "Interf=%f"%Interf
@@ -353,7 +359,7 @@ def channelAllocate(BSCover,BSchanAllocate,bsx,bsy):
 def getPower(chanlist):
     '''
             此函数的功能是根据基站信道的分配列表，得到信道的功率分配矩阵。值得注意的是:初始条件下信道的分配是基站的平均功率
-            按照在瓶平均功率条件下的信道分配方案，调整信道功率的大小，会得到一系列的初始化粒子，保证每个基站的信道功率和不能超过此基站的总功率
+            按照在平均功率条件下的信道分配方案，调整信道功率的大小，会得到一系列的初始化粒子，保证每个基站的信道功率和不能超过此基站的总功率
              产生 num 个初始化粒子
             改：根据信道分配得到对应信道的的功率分配 【比例】，由于不同基站的基站功率不同为了方便，使用功率比例(等级)2017年5月26日15:58
     '''
@@ -372,6 +378,8 @@ def getPower(chanlist):
                     p[i][j] = randp[n]
                     n = n + 1
     return p
+
+#----------------------------功率矩阵转变为粒子群初始化粒子-----------------------------------------------
 def turnInToParticle (p):
     '''
             将功率矩阵转换为粒子，p为粒子功率等级分配的矩阵
@@ -380,15 +388,17 @@ def turnInToParticle (p):
     for i in p:
         temp = temp + i
     return temp
-        
-def ParticleInToMatrix(p):#函数的作用是:将一个粒子群的粒子转换为原来的二维数组(矩阵)
+
+#----------------------------------粒子群粒子转换为原来的二维矩阵----------------------------------------        
+def ParticleInToMatrix(p):#函数的作用是:将一个粒子群的粒子转换为原来的二维数组(矩阵)(只是从数值上来说：此时的数值变为功率等级)
     '''p表示一个功率等级的粒子'''
     PRankmatrix = []#功率等级矩阵
     for i in xrange(len(p)/64):
         PRankmatrix.append(p[64*i:63+64*i])
     return PRankmatrix 
 
-def chanNumOfEachUser(chanAllocate):
+#-------------------------------------统 计 用 户 信 道 数 量 函 数 -----------------------------------------
+def chanNumOfEachUser(chanAllocate): 
     '''函数的功能是根据信道的分配列表统计每个用户使用信道的数量，返回一个字典'''
     chanUserDict = {}
     for i in xrange(len(chanAllocate)):
@@ -400,7 +410,7 @@ def chanNumOfEachUser(chanAllocate):
                     else:
                         chanUserDict[j] = chanAllocate[i].count(j)
     return chanUserDict
-
+#------------------------------判断两个矩阵相等----------------------------------------
 def judgeTwoListEqual(ndarray1,ndarray2):
     '''判断两个array是否相等'''
     return (ndarray1 ==ndarray2).all()#判断两个矩阵相等
@@ -419,9 +429,8 @@ if __name__=="__main__":
     An_k_s=[[0 for i in xrange(channelnum)] for j in xrange(TotalNum)] 
     BSchanAllocate=[[-1 for i in xrange(channelnum)] for j in xrange(len(BSCover))]#初始化信道分配
     for i in xrange(5):
-        BSchanAllocate = channelAllocate(BSCover,BSchanAllocate,BSX,BSY)
-    
-    
+        BSchanAllocate = channelAllocate(BSCover,BSchanAllocate,BSX,BSY)#2017年6月23日11:10:04修改（实际上没做任何修改），原因：之前是想在原来的存在的BSchanAllocate基础上通过多次信道的重新分配达到一个相对稳定或者较好的的状态
+     
     for i in xrange(len(BSchanAllocate)):
         print BSchanAllocate[i]
         for j in xrange(len(BSchanAllocate[i])):

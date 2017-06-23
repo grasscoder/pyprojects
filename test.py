@@ -1,5 +1,5 @@
 # -*- coding:utf-8 -*-
-from math import *
+# from math import *
 '''
 Created on 2017��4��20��
 
@@ -7,8 +7,8 @@ Created on 2017��4��20��
 '''
 # macropathLoss = 128.1 + 37.6*np.log10(d) 
 
-r = (150*10**6/(64.0*log(2)))*log(1 + (20/64.0)*(128.1+37.6*log10(10))/9)
-print str(r/8)+" byte/s"
+# r = (150*10**6/(64.0*log(2)))*log(1 + (20/64.0)*(128.1+37.6*log10(10))/9)
+# print str(r/8)+" byte/s"
 
 
 
@@ -18,7 +18,7 @@ print str(r/8)+" byte/s"
 #         self.val = x
 #         self.left = None
 #         self.right = None
-class Solution:
+# class Solution:
     # 返回构造的TreeNode根节点
       
     #def reConstructBinaryTree(self, pre, tin):
@@ -46,3 +46,10 @@ class Solution:
 #             flag.left = self.reConstructBinaryTree(pre[1:tin.index(pre[0])+1],tin[:tin.index(pre[0])])
 #             flag.right = self.reConstructBinaryTree(pre[tin.index(pre[0])+1:],tin[tin.index(pre[0])+1:] )
 #         return flag
+
+def char2num(s):
+    return {'0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9}[s]
+
+def str2int(s):
+    return reduce(lambda x,y: x*10+y, map(char2num, s))
+str2int(2)
