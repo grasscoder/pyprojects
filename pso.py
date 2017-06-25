@@ -4,7 +4,7 @@ import copy
 import numpy as np  
 # import matplotlib.pyplot as plt
 from CAPalloction import readFile,classifyUser,getPower,interfere1,RateNow,channelAllocate,turnInToParticle,chanNumOfEachUser,ParticleInToMatrix
-
+from SINR import distance
 #----------------------PSO参数设置---------------------------------  
 class PSO(): 
     def __init__(self,pN,dim,max_iter):  
@@ -36,13 +36,30 @@ class PSO():
         """注意此时的功率不是信道分配时的平均功率，而是按照功率等级划分的功率,所以需要传入的参数还有功率等级。"""
         """定义一个求信噪比的函数:基站n将信道s分配给用户k,X表示一个粒子(功率等级的粒子),不是初始化由各个粒子组成的矩阵"""
         '''interfere1(n, s, user, chanlist, bsx, bsy)函数参数'''
+        SINRlist = []##定义一个sinr列表，初始化为空，后续会在里面包含每一个用户的SINR值，其长度等于用户数量
         bsx = self.BSX + [0]#将宏基站的坐标加入到基站坐标bsx,bsy中
         bsy = self.BSY + [0]
-        X = np.array(ParticleInToMatrix(X)) #将得到的粒子转为原来的功率等级矩阵
+        XP = np.array(ParticleInToMatrix(X)) #将得到的粒子转为原来的功率等级矩阵(有没有必要转成ndarray有待考虑)
         channelofEacheruser = chanNumOfEachUser(self.BSchanAllocate)##每个用户的信道数量
-        for indexi in xrange(len(self.BSchanAllocate)):
+        for indexi in xrange(len(self.BSchanAllocate)):#对于同一个用户占用多个信道的情况后续处理，暂时当做每个不同信道的用户当做不同的用户，即便是同一个用户
             if self.BSchanAllocate[indexi].count(-1) < 64:##当前基站存在信道分配
-                
+                currentBSX = bsx[indexi]#获取当前用户所在的基站的坐标值
+                currentBSY = bsy[indexi]
+                if indexi!=len(self.BSchanAllocate)-1:
+                    P = 1.0
+                    L = 100.0
+                else:
+                    P = 20.0
+                    L = 500.0
+                for indexj in xrange(len(self.BSchanAllocate[indexi])):
+                    p = []
+                    sameuser = []
+                    if self.BSchanAllocate[indexi][indexj]!=-1:#说明此信道已经分配用户
+                        u = self.BSchanAllocate[indexi][indexj]
+                        p1 = XP[indexi][indexj]#得到对应信道分配的功率等级
+                        inter = interfere1(indexi, indexj, u, self.BSchanAllocate, bsx, bsy)
+                        d = distance(u[0],u[1],currentBSX,currentBSY)
+                        sinr = P*p1*d**(-4)/(inter+P*(L**(-4)))
         
         
         
