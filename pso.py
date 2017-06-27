@@ -1,9 +1,10 @@
 # -*-coding:utf-8 -*-
 import random  
 import copy  
-import numpy as np  
+import numpy as np
+from numpy import log2
 # import matplotlib.pyplot as plt
-from CAPalloction import readFile,classifyUser,getPower,interfere1,RateNow,channelAllocate,turnInToParticle,chanNumOfEachUser,ParticleInToMatrix
+from CAPalloction import channelbandwidth, readFile,classifyUser,getPower,interfere1,RateNow,channelAllocate,turnInToParticle,chanNumOfEachUser,ParticleInToMatrix
 from SINR import distance
 #----------------------PSO参数设置---------------------------------  
 class PSO(): 
@@ -61,7 +62,7 @@ class PSO():
                         SINRlist.append(sinr)## 暂时将所得到的值追加到SINRlist中去,至于一个用户占用多个信道的问题，暂时还没有想到别的办法，捎带考虑；这么做得到的结果是：这个列表的长度>=用户数量
                      
                     else:
-                        ##要不然吧SINRlist矩阵也变成BSchanAllocate矩阵那样的形式，这样便于计算
+                        ##要不然把SINRlist矩阵也变成BSchanAllocate矩阵那样的形式，这样便于计算
                         SINRlist.append(0)
             else:
                 for i in xrange(64):
@@ -70,10 +71,32 @@ class PSO():
         return SINRlist      
 #-----------------------每个用户速率的函数---------------------------- 
     def userV(self,X):#计算每个用户的速率
-        '''定义一个求用户速率的函数，返回值是一个用户速率的列表'''
-        SINRlist = self.SINR(X)
-        
-        
+        '''此函数运行机制：根据BSCover中的用户，在BSchanAllocate中寻找这个用户所占用的信道，并将速率和相加'''
+        '''定义一个求用户速率的函数，返回值是一个用户对应每一个信道的速率的列表，要进行下一步计算，需要明确每一个用户占用的信道'''
+        SINRlist = np.array(self.SINR(X))
+        userV =channelbandwidth*log2(1+SINRlist)#得到用户速率的二维矩阵，其中每一个分配信道的用户当做是一个单独的个体
+        V = []
+        for i in xrange(len(self.BSCover)):
+            if self.BSCover[i] != []:
+                ##下面要做的是寻找占多个信道的同一个用户,将速率累加起来返回一个list
+                for j in xrange(len(self.BSCover[i])):
+                    rate = 0
+                    if self.BSchanAllocate[i].count(-1)>0:##信道分配的矩阵中当前基站存在未分配的信道
+                        #所以只在当前行代表的基站范围查找用户
+                        
+                        for indexi in xrange(len(self.BSchanAllocate[i])):#通过BSchanAllocate查找速率矩阵用户对应的速率值
+                            
+                            if self.BSCover[i][j]==self.BSchanAllocate[i][indexi]:
+                                rate += userV[i][indexi]
+                        #V.append(rate)
+                    else:
+                        #在全部范围搜索是否有同一个用户占用不同基站的不同信道
+                        for ii in xrange(len(self.BSchanAllocate)):
+                            for jj in xrange(self.BSchanAllocate[ii]):
+                                if self.BSCover[i][j]==self.BSchanAllocate[ii][jj]:
+                                    rate += userV[ii][jj]
+                    V.append(rate)#上面的if和else 必定会执行一个
+        return V 
         
 #---------------------目标函数Sphere函数-----------------------------  
     def function(self,x):  #p不是列表，是numpy.ndarray,列表是不能进行数值运算的
