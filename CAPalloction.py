@@ -169,6 +169,8 @@ def interfere1(n, s, user, chanlist, bsx, bsy):
                 interf += p*(d**(-4))
     
         return interf
+    else:
+        print "Function interfere1:len(chanlist)!=len(BS)"
 
 """
     BSCover 一行代表一个基站 下的所有用户
@@ -394,7 +396,7 @@ def ParticleInToMatrix(p):#函数的作用是:将一个粒子群的粒子转换�
     '''p表示一个功率等级的粒子'''
     PRankmatrix = []#功率等级矩阵
     for i in xrange(len(p)/64):
-        PRankmatrix.append(p[64*i:63+64*i])
+        PRankmatrix.append(p[64*i:64+64*i])##右边界取不到
     return PRankmatrix 
 
 #-------------------------------------统 计 用 户 信 道 数 量 函 数 -----------------------------------------
@@ -414,8 +416,8 @@ def chanNumOfEachUser(chanAllocate):
 def judgeTwoListEqual(ndarray1,ndarray2):
     '''判断两个array是否相等'''
     return (ndarray1 ==ndarray2).all()#判断两个矩阵相等
+#     return (ndarray1>ndarray2).all()#判断前一个矩阵大于后一个矩阵
      
-       
 #------------------------------主 函 数 ---------------------------------------
 if __name__=="__main__":
     
@@ -431,11 +433,11 @@ if __name__=="__main__":
     for i in xrange(5):
         BSchanAllocate = channelAllocate(BSCover,BSchanAllocate,BSX,BSY)#2017年6月23日11:10:04修改（实际上没做任何修改），原因：之前是想在原来的存在的BSchanAllocate基础上通过多次信道的重新分配达到一个相对稳定或者较好的的状态
      
-    for i in xrange(len(BSchanAllocate)):
-        print BSchanAllocate[i]
-        for j in xrange(len(BSchanAllocate[i])):
-            if BSchanAllocate[i][j]!=-1:
-                An_k_s[i][j]=1
+#     for i in xrange(len(BSchanAllocate)):
+#         print BSchanAllocate[i]
+#         for j in xrange(len(BSchanAllocate[i])):
+#             if BSchanAllocate[i][j]!=-1:
+#                 An_k_s[i][j]=1
 
     ##既然信道分配已经确定了，那么平均功率所组成的一个粒子可以算作一个初始化粒子，然后针对这些已经分配信道的的用户的信道功率多做几次（20次）功率随机分配，就会产生许多不同的初始化
    
@@ -445,9 +447,17 @@ if __name__=="__main__":
 #         P.append(p)
 #     for j in P:
 #         print j
-    p = getPower(BSchanAllocate)
-    for i in xrange(len(p)):
-        print p[i]
-        if i==len(p)-1:
-            print sum(p[i])
-
+#     p = getPower(BSchanAllocate)
+#     for i in xrange(len(p)):
+#         print p[i]
+#         if i==len(p)-1:
+#             print sum(p[i])
+    x = turnInToParticle(BSchanAllocate)
+    y = ParticleInToMatrix(x)##出问题了
+    print len(x)
+    for i in xrange(len(y)):
+        print len(y[i]) 
+        
+        
+        
+        

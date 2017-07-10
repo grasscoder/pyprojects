@@ -3,7 +3,7 @@ import random
 import copy  
 import numpy as np
 from numpy import log2
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from CAPalloction import channelbandwidth, readFile,classifyUser,getPower,interfere1,RateNow,channelAllocate,turnInToParticle,chanNumOfEachUser,ParticleInToMatrix
 from SINR import distance
 #----------------------PSO参数设置---------------------------------  
@@ -37,9 +37,14 @@ class PSO():
         """定义一个求信噪比的函数:基站n将信道s分配给用户k,X表示一个粒子(功率等级的粒子),不是初始化由各个粒子组成的矩阵"""
         '''interfere1(n, s, user, chanlist, bsx, bsy)函数参数'''
         SINRlist = []##定义一个sinr列表，初始化为空，后续会在里面包含每一个用户的SINR值，其长度等于用户数量
-        bsx = self.BSX + [0]#将宏基站的坐标加入到基站坐标bsx,bsy中
-        bsy = self.BSY + [0]
+        bsx = self.BSX #将宏基站的坐标加入到基站坐标bsx,bsy中
+        print bsx
+        bsy = self.BSY
+        print bsy
         XP = np.array(ParticleInToMatrix(X)) #将得到的粒子转为原来的功率等级矩阵(有没有必要转成ndarray有待考虑)
+        print len(X)
+        for i in xrange(len(XP)):
+            print len(XP[i])
 #         channelofEacheruser = chanNumOfEachUser(self.BSchanAllocate)##每个用户的信道数量
         for indexi in xrange(len(self.BSchanAllocate)):#对于同一个用户占用多个信道的情况后续处理，暂时当做每个不同信道的用户当做不同的用户，即便是同一个用户
             if self.BSchanAllocate[indexi].count(-1) < 64:##当前基站存在信道分配
@@ -58,7 +63,8 @@ class PSO():
                         p1 = XP[indexi][indexj]#得到对应信道分配的功率等级
                         inter = interfere1(indexi, indexj, u, self.BSchanAllocate, bsx, bsy)
                         d = distance(u[0],u[1],currentBSX,currentBSY)
-                        sinr = P*p1*d**(-4)/(inter+P*(L**(-4)))
+#                         print type(inter)
+                        sinr = P*p1*d**(-4)/(inter + P*L**(-4))
                         SINRlist.append(sinr)## 暂时将所得到的值追加到SINRlist中去,至于一个用户占用多个信道的问题，暂时还没有想到别的办法，捎带考虑；这么做得到的结果是：这个列表的长度>=用户数量
                      
                     else:
@@ -96,7 +102,7 @@ class PSO():
                                 if self.BSCover[i][j]==self.BSchanAllocate[ii][jj]:
                                     rate += userV[ii][jj]
                     V.append(rate)#上面的if和else 必定会执行一个
-        return V 
+        return V#返回的是列表，下面求self.p_fit[i]得是一个值【注意注意】
         
 #---------------------目标函数Sphere函数-----------------------------  
     def function(self,x):  #p不是列表，是numpy.ndarray,列表是不能进行数值运算的
@@ -124,9 +130,10 @@ class PSO():
             for j in range(self.dim):
                 self.V[i][j] = random.uniform(0,1) #初始化粒子的速度
             self.pbest[i] = self.X[i] ##每个粒子的最佳位置 
-            tmp = self.function(self.X[i])#调用目标函数，计算当前粒子的适应值，目标函数是处理每一个粒子的，在这个表达式中显而易见
+#             tmp = self.function(self.X[i])#调用目标函数，计算当前粒子的适应值，目标函数是处理每一个粒子的，在这个表达式中显而易见
+            tmp = self.userV(self.X[i])#调用目标函数，计算当前粒子的适应值，目标函数是处理每一个粒子的，在这个表达式中显而易见
             self.p_fit[i] = tmp  ##每个粒子最佳适应值
-            if(tmp < self.fit):  #判断小于全局最佳适应值，将当前粒子的最佳适应值赋值给全局最佳适应值
+            if(tmp < self.fit):  #判断小于全局最佳适应值，将当前粒子的最佳适应值赋值给全局最佳适应值【适应度的值是一个（向量），所以这里在初始化中需要改】
                 self.fit = tmp   #
                 self.gbest = self.X[i]
 
@@ -145,7 +152,7 @@ class PSO():
                 if self.X[i][j]!=0:##在x[i]不为0的位置，随机初始化一个速度值
                     self.V[i][j] = random.uniform(0,1) #初始化粒子的速度
             self.pbest[i] = self.X[i] ##每个粒子的最佳位置 
-            tmp = self.function(self.X[i])#调用目标函数，计算当前粒子的适应值，目标函数是处理每一个粒子的，在这个表达式中显而易见
+            tmp = self.userV(self.X[i])#调用目标函数，计算当前粒子的适应值，目标函数是处理每一个粒子的，在这个表达式中显而易见
             self.p_fit[i] = tmp  ##每个粒子最佳适应值
             if(tmp < self.fit):  #判断小于全局最佳适应值，将当前粒子的最佳适应值赋值给全局最佳适应值
                 self.fit = tmp   #
@@ -196,14 +203,14 @@ if __name__=="__main__":
     fitness = my_pso.iterator()  
     my_pso.printXV()
     #----------------------画 图--------------------------  
-#     plt.figure(1)  
-#     plt.title("Figure1")  
-#     plt.xlabel("iterators", size=14)  
-#     plt.ylabel("fitness", size=14)  
-#     t = np.array([t for t in range(0,max_iter)]) ##200 为max_iter 
-#     fitness = np.array(fitness)  
-#     plt.plot(t,fitness, color='b',linewidth=3)  
-#     plt.show()
+    plt.figure(1)  
+    plt.title("Figure1")  
+    plt.xlabel("iterators", size=14)  
+    plt.ylabel("fitness", size=14)  
+    t = np.array([t for t in range(0,max_iter)]) ##200 为max_iter 
+    fitness = np.array(fitness)  
+    plt.plot(t,fitness, color='b',linewidth=3)  
+    plt.show()
 
 
 
