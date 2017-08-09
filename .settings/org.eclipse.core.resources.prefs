@@ -1,11 +1,14 @@
 eclipse.preferences.version=1
 encoding/CAPalloction.py=utf-8
+encoding/CRC16.py=utf-8
 encoding/Drawpic.py=gbk
 encoding/SINR.py=utf-8
 encoding/brest.py=utf-8
 encoding/chanAllocate.py=utf-8
 encoding/coverage.py=utf-8
+encoding/data.py=utf-8
 encoding/flask_email.py=utf-8
+encoding/frameAnalysis.py=utf-8
 encoding/pract.py=utf-8
 encoding/pso.py=utf-8
 encoding/test.py=utf-8
