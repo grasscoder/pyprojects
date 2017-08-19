@@ -51,46 +51,17 @@ class FrameAnnalysis(object):
             self.field["CTR"] = ctr0
             leftframe = leftframectr[2:]
             return returnctr,leftframe
-        else:#有扩展控制码
+        else:#==0有扩展控制码
             i = 1
             chars = ctr0
             while int(ctr0,16)&0x80==0:#循环判断默认ctr之后的扩展字节是否可扩展
-                ctr = leftframectr[2*i:2*i+2]
-                chars += ctr##字符串拼接 
+                ctr0 = leftframectr[2*i:2*i+2]#此ctr0并不是指字符串开头
+                chars += ctr0##字符串拼接 
                 i+=1
+                
             self.field["CTR"] = chars #讲扩展的CTR(ctr0,ctr1,...)构成的字符串追加进入域的全局变量中
             leftframe = leftframectr[2*i:]#捕获去掉ctr0,ctr1,...剩余的字符串
-            ##提取出ctr1内容部分
-            ctr1 = self.field["CTR"][2:4]
-            num  = int(ctr1,16)
-            if num==0x07:#代表寻址方式是广播，长度为0字节
-                self.field["ADDR"] = leftframe#直接返回原字符串
-                
-            elif num==0x06:##代表寻址方式是LA，长度为1
-                self.field["ADDR"] = leftframe[:2]
-                
-            elif num==0x05:##代表寻址方式是ID，长度为12
-                self.field["ADDR"] = leftframe[:24]
-                
-            elif num==0x04:##代表寻址方式是UC，长度为5字节
-                n= 2##这个不对2<=n<=8
-                self.field["ADDR"] = leftframe[:10]
-                
-            elif num==0x03:#长度2字节
-                self.field["ADDR"] = leftframe[:4]
-                
-            elif num==0x02:#长度为4字节
-                self.field["ADDR"] = leftframe[:8]
-            
-            elif num==0x01:#长度为6字节
-                self.field["ADDR"] = leftframe[:12]
-                
-            elif num==0x00:#8字节
-                self.field["ADDR"] = leftframe[:16]
-                
-            else:#0字节
-                self.field["ADDR"] = leftframe
-#             return returnctr,self.leftframe[2*i:]#返回ctr第一个字节（便于获得首字节的每一位的信息）、后续长度的剩余字符串
+            return returnctr,leftframe#返回ctr第一个字节（便于获得首字节的每一位的信息）、后续长度的剩余字符串
         
     def MAM(self):#MAM域占一个字节
         '''E7 10231195711100600800100009190069711100600850120115B8C0FF4FB1'''
@@ -106,13 +77,46 @@ class FrameAnnalysis(object):
             self.field["MAM"] = leftframemam[:2]#MAM占一个字节
             return leftframemam[2:]#返回去掉多级地址的的字符串            
     
-    def ADDR(self):#addr是由CTR1控制的，也就是说当存在CTR1时，ADDR也就存在,ADDR的具体形式由见表2-4寻址方式定义
+    def ADDR(self):#addr是由CTR的b0-b2比特位控制的，当存在CTR1时，CTR1的b2-b0比特位表示的主站寻址方式，只存在ctr0时，b2-b0比特位表示从站的寻址方式，主从的寻址方式都是一样的
         leftframeaddr = self.MAM()##获取MAM()处理后的字符串
+        ##提取出ctr1内容部分
+        ctr0 = self.field["CTR"][:2]
+        if int(ctr0,16)&0x80==0:
+            ctr1 = self.field["CTR"][2:4]
+            num1  = int(ctr1,16)
+        num = int(ctr0,16)
         
-        
+        if num is 0x07:#代表寻址方式是广播，长度为0字节
+            self.field["ADDR"] = ""#直接返回原字符串
+            return leftframeaddr
+        elif num==0x06:##代表寻址方式是LA，长度为1
+            self.field["ADDR"] = leftframeaddr[:2]
+            return leftframeaddr[2:]
+        elif num==0x05:##代表寻址方式是ID，长度为12
+            self.field["ADDR"] = leftframeaddr[:24]
+            return leftframeaddr[24:]
+        elif num==0x04:##代表寻址方式是UC，长度为5字节
+            self.field["ADDR"] = leftframeaddr[:10]
+            return leftframeaddr[10:]    
+        elif num==0x03:#长度2字节
+            self.field["ADDR"] = leftframeaddr[:4]
+            return leftframeaddr[4:]
+        elif num==0x02:#长度为4字节
+            self.field["ADDR"] = leftframeaddr[:8]
+            return leftframeaddr[8:]
+        elif num==0x01:#长度为6字节
+            self.field["ADDR"] = leftframeaddr[:12]
+            return leftframeaddr[12:]
+        elif num==0x00:#8字节
+            self.field["ADDR"] = leftframeaddr[:16]
+            return leftframeaddr[16:]
+        else:#0字节
+            return leftframeaddr
     
     def SER(self):#长度为1个字节
-        pass
+        leftframeser = self.ADDR()
+        self.field["SER"] = leftframeser[:2]
+        return leftframeser[2:]
     
     def DI(self):##
         pass
